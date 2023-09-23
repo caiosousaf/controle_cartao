@@ -74,8 +74,6 @@ func ParseParams(c *gin.Context) (parametros Parametros, err error) {
 }
 
 func (p *Parametros) ValidarOrdenador(dst interface{}) string {
-	const ()
-
 	elemDst := reflect.ValueOf(dst).Elem()
 
 	if elemDst.Kind() != reflect.Struct || elemDst.NumField() == 0 {
