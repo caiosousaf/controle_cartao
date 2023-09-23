@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"reflect"
 	"strconv"
 )
@@ -205,4 +206,14 @@ func (p *Parametros) ValidFields(dst interface{}, options ...map[string]string) 
 	}
 
 	return
+}
+
+// GetUUIDFromParam pega um parametro da rota e retorna um ponteiro de uuid
+func GetUUIDFromParam(c *gin.Context, paramName string) (*uuid.UUID, error) {
+	id := c.Param(paramName)
+	uuidObj, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+	return &uuidObj, nil
 }
