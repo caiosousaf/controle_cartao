@@ -4,6 +4,7 @@ import (
 	"controle_cartao/config/database"
 	"controle_cartao/domain/cadastros/cartao"
 	"controle_cartao/utils"
+	"github.com/google/uuid"
 )
 
 // ListarCartoes contém a regra de negócio para listar os cartões
@@ -33,6 +34,36 @@ func ListarCartoes(p *utils.Parametros) (res *ResPag, err error) {
 	}
 
 	res.Total, res.Prox = listaCartoes.Total, listaCartoes.Prox
+
+	return
+}
+
+// BuscarCartao contém a regra de negócio para buscar um cartão
+func BuscarCartao(id *uuid.UUID) (res *Res, err error) {
+	const msgErrPadrao = "Erro ao buscar um cartão"
+
+	res = new(Res)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+
+	defer db.Close()
+
+	repo := cartao.NovoRepo(db)
+
+	buscaCartao, err := repo.BuscarCartao(id)
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+
+	res = &Res{
+		ID:              buscaCartao.ID,
+		Nome:            buscaCartao.Nome,
+		DataCriacao:     buscaCartao.DataCriacao,
+		DataDesativacao: buscaCartao.DataDesativacao,
+	}
 
 	return
 }

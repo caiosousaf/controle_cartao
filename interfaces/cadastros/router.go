@@ -8,4 +8,5 @@ import (
 // Router é um router para gerenciamento das rotas de cadastros
 func Router(r *gin.RouterGroup) {
 	cartao.Router(r.Group("cartoes"))
+	cartao.RouterWithID(r.Group("cartao"))
 }

@@ -21,3 +21,22 @@ func listarCartoes(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+// buscarCartao godoc
+func buscarCartao(c *gin.Context) {
+	id, err := utils.GetUUIDFromParam(c, "cartao_id")
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	res, err := cartao.BuscarCartao(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
