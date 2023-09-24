@@ -2,12 +2,17 @@ package utils
 
 import (
 	"errors"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"reflect"
 	"strconv"
 )
 
+// FlagFiltro é usado para definir o tipo do filtro
+type FlagFiltro int
+
+// Parametros é usado para requisições quando o parametro Query é necessário
 type Parametros struct {
 	Campos      []string
 	OrderCampo  string
@@ -22,12 +27,74 @@ type Parametros struct {
 	Chart       bool
 }
 
+// Filtro é a representação de um filtro disponível
+type Filtro struct {
+	Valor   string
+	Flag    FlagFiltro
+	Tamanho int
+}
+
 const (
 	sourceTag      = "apelido"
 	destinationTag = "sql"
-	aliasTag       = "alias"
-	distinctTag    = "distinct"
+	// aliasTag é uma tag que serve para dizer qual é alias do campo
+	aliasTag = "alias"
+	// distinctTag é uma tag especifica para se colocar distinct em um campo
+	distinctTag = "distinct"
+	// MaxLimit define um valor máximo que uma listagem pode requisitar
+	MaxLimit = 10000
 )
+
+const (
+	FlagFiltroNenhum FlagFiltro = 1 << iota
+	FlagFiltroEq
+	FlagFiltroIn
+	FlagFiltroNotIn
+)
+
+// CriarFiltros cria os filtros
+func CriarFiltros(v string, flag FlagFiltro, tamanho ...int) Filtro {
+	if len(tamanho) == 0 {
+		tamanho = []int{1}
+	}
+
+	return Filtro{
+		Valor:   v,
+		Flag:    flag,
+		Tamanho: tamanho[0],
+	}
+}
+
+// CriarFiltros retorna um squirrel.SelectBuilder com todos os filtros aplicados a ele
+func (p *Parametros) CriarFiltros(builder sq.SelectBuilder, disponiveis map[string]Filtro) sq.SelectBuilder {
+	for k := range disponiveis {
+		var v = disponiveis[k]
+		for k1, v1 := range p.Filtros {
+			if k == k1 {
+				v.Valor = "( " + v.Valor + " )"
+				switch v.Flag {
+				case FlagFiltroIn:
+					builder = builder.Where(sq.Eq{
+						v.Valor: v1,
+					})
+				case FlagFiltroNotIn:
+					builder = builder.Where(sq.NotEq{
+						v.Valor: v1,
+					})
+				case FlagFiltroEq:
+					builder = builder.Where(v.Valor, func(xs []string) (v []interface{}) {
+						for x := range xs {
+							v = append(v, xs[x])
+						}
+						return
+					}(v1[0:v.Tamanho])...)
+				}
+			}
+		}
+	}
+
+	return builder
+}
 
 func ParseParams(c *gin.Context) (parametros Parametros, err error) {
 	lim, err := strconv.Atoi(c.DefaultQuery("limit", "15"))
@@ -35,7 +102,6 @@ func ParseParams(c *gin.Context) (parametros Parametros, err error) {
 		return
 	}
 
-	const MaxLimit = 10000
 	if lim <= 0 {
 		lim = MaxLimit
 	}
