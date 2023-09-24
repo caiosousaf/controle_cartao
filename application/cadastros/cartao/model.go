@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+// Req modela uma requisição para a criação de um cartão
+type Req struct {
+	Nome *string `json:"nome" apelido:"nome"`
+}
+
 // Res modela uma resposta para listagem e busca de cartões
 type Res struct {
 	ID              *uuid.UUID `json:"id" apelido:"id"`

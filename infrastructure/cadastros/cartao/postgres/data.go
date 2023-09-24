@@ -13,6 +13,20 @@ type DBCartao struct {
 	DB *sql.DB
 }
 
+// CadastrarCartao cadastra um novo cartao no banco de dados
+func (pg *DBCartao) CadastrarCartao(req *model.Cartao) (err error) {
+	if err = sq.StatementBuilder.RunWith(pg.DB).Insert("public.t_cartao").
+		Columns("nome").
+		Values(*req.Nome).
+		PlaceholderFormat(sq.Dollar).
+		Suffix(`RETURNING "id"`).
+		Scan(&req.ID); err != nil {
+		return err
+	}
+
+	return
+}
+
 // ListarCartoes lista de forma paginada os dados dos cartões cadastrados no banco de dados
 func (pg *DBCartao) ListarCartoes(p *utils.Parametros) (res *model.CartaoPag, err error) {
 	var t model.Cartao

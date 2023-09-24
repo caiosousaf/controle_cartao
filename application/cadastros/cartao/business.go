@@ -3,9 +3,40 @@ package cartao
 import (
 	"controle_cartao/config/database"
 	"controle_cartao/domain/cadastros/cartao"
+	infra "controle_cartao/infrastructure/cadastros/cartao"
 	"controle_cartao/utils"
 	"github.com/google/uuid"
 )
+
+// CadastrarCartao contém a regra de negócio para cadastrar um novo cartão
+func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
+	const msgErrPadrao = "Erro ao cadastrar novo cartão"
+	var (
+	// p utils.Parametros
+	)
+
+	var reqInfra = new(infra.Cartao)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return id, utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	repo := cartao.NovoRepo(db)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return id, utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = repo.CadastrarCartao(reqInfra); err != nil {
+		return id, utils.Wrap(err, msgErrPadrao)
+	}
+
+	id = reqInfra.ID
+
+	return
+}
 
 // ListarCartoes contém a regra de negócio para listar os cartões
 func ListarCartoes(p *utils.Parametros) (res *ResPag, err error) {
