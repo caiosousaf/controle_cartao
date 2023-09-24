@@ -66,3 +66,13 @@ func ConfigurarPaginacao(p *Parametros, model interface{}, query *sq.SelectBuild
 
 	return
 }
+
+// SelectBuilderToString recebe um squirrel.SelectBuilder e retorna ela em string
+func SelectBuilderToString(builder sq.SelectBuilder) (build string, err error) {
+	build, _, err = builder.ToSql()
+	if err != nil {
+		return build, err
+	}
+
+	return
+}
