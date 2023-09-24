@@ -42,7 +42,11 @@ func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
 	}
 
 	if len(lista.Dados) > 0 {
-		return id, utils.NewErr("Já existe um cartão cadastrado com esse nome")
+		if lista.Dados[0].DataDesativacao != nil {
+
+		} else {
+			return id, utils.NewErr("Já existe um cartão ativo com esse nome")
+		}
 	}
 
 	if err = repo.CadastrarCartao(reqInfra); err != nil {
