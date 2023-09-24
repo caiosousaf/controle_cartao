@@ -12,4 +12,5 @@ func Router(r *gin.RouterGroup) {
 func RouterWithID(r *gin.RouterGroup) {
 	r.GET(":cartao_id", buscarCartao)
 	r.PUT(":cartao_id", atualizarCartao)
+	r.PUT(":cartao_id/remover", removerCartao)
 }

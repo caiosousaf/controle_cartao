@@ -12,4 +12,5 @@ type ICartao interface {
 	ListarCartoes(p *utils.Parametros) (*cartao.CartaoPag, error)
 	BuscarCartao(id *uuid.UUID) (*cartao.Cartao, error)
 	AtualizarCartao(req *cartao.Cartao, id *uuid.UUID) error
+	RemoverCartao(id *uuid.UUID) error
 }

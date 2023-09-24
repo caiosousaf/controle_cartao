@@ -38,6 +38,7 @@ func (pg *DBCartao) ListarCartoes(p *utils.Parametros) (res *model.CartaoPag, er
 
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"nome_exato": utils.CriarFiltros("lower(TC.nome) = lower(?)", utils.FlagFiltroEq),
+		"ativo":      utils.CriarFiltros("data_desativacao IS NULL = ?", utils.FlagFiltroEq),
 	}).PlaceholderFormat(sq.Dollar)
 
 	dados, prox, total, err := utils.ConfigurarPaginacao(p, &t, &consultaComFiltro)
@@ -65,7 +66,6 @@ func (pg *DBCartao) BuscarCartao(id *uuid.UUID) (res *model.Cartao, err error) {
 
 // AtualizarCartao atualiza os dados de um cartão no banco de dados dado o seu id
 func (pg *DBCartao) AtualizarCartao(req *model.Cartao, id *uuid.UUID) (err error) {
-	// Crie o construtor de consulta
 	updateBuilder := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_cartao").
 		Set("nome", req.Nome).
 		Where(sq.Eq{
@@ -78,6 +78,28 @@ func (pg *DBCartao) AtualizarCartao(req *model.Cartao, id *uuid.UUID) (err error
 	if err != nil {
 		return err
 	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("ID do cartão inexistente")
+	}
+
+	return
+}
+
+// RemoverCartao desativa os dados de um cartão no banco de dados dado o seu id
+func (pg *DBCartao) RemoverCartao(id *uuid.UUID) (err error) {
+	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_cartao").
+		Set("data_desativacao", "NOW()").
+		Where(sq.Eq{
+			"id": id,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {

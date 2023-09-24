@@ -166,3 +166,23 @@ func AtualizarCartao(req *ReqAtualizar, id *uuid.UUID) (err error) {
 
 	return
 }
+
+// RemoverCartao contém a regra de negócio para desativar um cartão de crédito
+func RemoverCartao(id *uuid.UUID) (err error) {
+	const msgErrPadrao = "Erro ao desativar cartão"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	defer db.Close()
+
+	repo := cartao.NovoRepo(db)
+
+	if err := repo.RemoverCartao(id); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}

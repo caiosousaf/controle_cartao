@@ -37,3 +37,8 @@ func (r *repo) BuscarCartao(id *uuid.UUID) (*cartao.Cartao, error) {
 func (r *repo) AtualizarCartao(req *cartao.Cartao, id *uuid.UUID) error {
 	return r.Data.AtualizarCartao(req, id)
 }
+
+// RemoverCartao é um gerenciador de fluxo de dados para desativar um cartão no banco de dados
+func (r *repo) RemoverCartao(id *uuid.UUID) error {
+	return r.Data.RemoverCartao(id)
+}
