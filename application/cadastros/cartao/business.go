@@ -10,7 +10,6 @@ import (
 
 // CadastrarCartao contém a regra de negócio para cadastrar um novo cartão
 func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
-
 	const (
 		msgErrPadrao         = "Erro ao cadastrar novo cartão"
 		msgErrPadraoListagem = "Erro ao listar cartão por nome"
@@ -114,6 +113,55 @@ func BuscarCartao(id *uuid.UUID) (res *Res, err error) {
 		Nome:            buscaCartao.Nome,
 		DataCriacao:     buscaCartao.DataCriacao,
 		DataDesativacao: buscaCartao.DataDesativacao,
+	}
+
+	return
+}
+
+// AtualizarCartao contém a regra de negócio para atualizar um cartão
+func AtualizarCartao(req *ReqAtualizar, id *uuid.UUID) (err error) {
+	const (
+		msgErrPadrao         = "Erro ao atualizar cartão"
+		msgErrPadraoListagem = "Erro ao listar cartão por nome"
+	)
+	var (
+		p utils.Parametros
+	)
+
+	var reqInfra = new(infra.Cartao)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	repo := cartao.NovoRepo(db)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	p.Filtros = make(map[string][]string)
+	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Limite = 1
+	lista, err := repo.ListarCartoes(&p)
+	if err != nil {
+		return utils.Wrap(err, msgErrPadraoListagem)
+	}
+
+	if len(lista.Dados) > 0 {
+		if lista.Dados[0].DataDesativacao != nil {
+			return utils.NewErr("Cartão desativado!")
+		} else if *id == *lista.Dados[0].ID {
+			return
+		} else {
+			return utils.NewErr("Já existe um cartão ativo com esse nome!")
+		}
+	}
+
+	if err = repo.AtualizarCartao(reqInfra, id); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
 	}
 
 	return

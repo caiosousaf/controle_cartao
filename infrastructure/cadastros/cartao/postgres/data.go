@@ -62,3 +62,31 @@ func (pg *DBCartao) BuscarCartao(id *uuid.UUID) (res *model.Cartao, err error) {
 
 	return
 }
+
+// AtualizarCartao atualiza os dados de um cartão no banco de dados dado o seu id
+func (pg *DBCartao) AtualizarCartao(req *model.Cartao, id *uuid.UUID) (err error) {
+	// Crie o construtor de consulta
+	updateBuilder := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_cartao").
+		Set("nome", req.Nome).
+		Where(sq.Eq{
+			"id":               id,
+			"data_desativacao": nil,
+		}).
+		PlaceholderFormat(sq.Dollar)
+
+	result, err := updateBuilder.Exec()
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("ID do cartão inexistente")
+	}
+
+	return
+}

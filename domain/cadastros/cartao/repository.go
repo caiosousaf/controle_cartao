@@ -32,3 +32,8 @@ func (r *repo) ListarCartoes(p *utils.Parametros) (*cartao.CartaoPag, error) {
 func (r *repo) BuscarCartao(id *uuid.UUID) (*cartao.Cartao, error) {
 	return r.Data.BuscarCartao(id)
 }
+
+// AtualizarCartao é um gerenciador de fluxo de dados para atualizar um cartão no banco de dados
+func (r *repo) AtualizarCartao(req *cartao.Cartao, id *uuid.UUID) error {
+	return r.Data.AtualizarCartao(req, id)
+}

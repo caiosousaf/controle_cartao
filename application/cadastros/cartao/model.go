@@ -10,6 +10,11 @@ type Req struct {
 	Nome *string `json:"nome" apelido:"nome"`
 }
 
+// ReqAtualizar modela uma requisição para a atualização de um cartão
+type ReqAtualizar struct {
+	Nome *string `json:"nome" apelido:"nome"`
+}
+
 // Res modela uma resposta para listagem e busca de cartões
 type Res struct {
 	ID              *uuid.UUID `json:"id" apelido:"id"`

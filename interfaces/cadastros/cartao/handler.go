@@ -59,3 +59,28 @@ func buscarCartao(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+// atualizarCartao godoc
+func atualizarCartao(c *gin.Context) {
+	var req cartao.ReqAtualizar
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	id, err := utils.GetUUIDFromParam(c, "cartao_id")
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	if err := cartao.AtualizarCartao(&req, id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}
