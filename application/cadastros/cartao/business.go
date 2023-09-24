@@ -10,9 +10,13 @@ import (
 
 // CadastrarCartao contém a regra de negócio para cadastrar um novo cartão
 func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
-	const msgErrPadrao = "Erro ao cadastrar novo cartão"
+
+	const (
+		msgErrPadrao         = "Erro ao cadastrar novo cartão"
+		msgErrPadraoListagem = "Erro ao listar cartão por nome"
+	)
 	var (
-	// p utils.Parametros
+		p utils.Parametros
 	)
 
 	var reqInfra = new(infra.Cartao)
@@ -27,6 +31,18 @@ func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
 
 	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
 		return id, utils.Wrap(err, msgErrPadrao)
+	}
+
+	p.Filtros = make(map[string][]string)
+	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Limite = 1
+	lista, err := repo.ListarCartoes(&p)
+	if err != nil {
+		return id, utils.Wrap(err, msgErrPadraoListagem)
+	}
+
+	if len(lista.Dados) > 0 {
+		return id, utils.NewErr("Já existe um cartão cadastrado com esse nome")
 	}
 
 	if err = repo.CadastrarCartao(reqInfra); err != nil {

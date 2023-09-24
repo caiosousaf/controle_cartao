@@ -33,10 +33,14 @@ func (pg *DBCartao) ListarCartoes(p *utils.Parametros) (res *model.CartaoPag, er
 
 	res = new(model.CartaoPag)
 
-	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select("id, nome, data_criacao, data_desativacao").
-		From("public.t_cartao")
+	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select("TC.id, TC.nome, TC.data_criacao, TC.data_desativacao").
+		From("public.t_cartao TC")
 
-	dados, prox, total, err := utils.ConfigurarPaginacao(p, &t, &consultaSql)
+	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
+		"nome_exato": utils.CriarFiltros("lower(TC.nome) = lower(?)", utils.FlagFiltroEq),
+	}).PlaceholderFormat(sq.Dollar)
+
+	dados, prox, total, err := utils.ConfigurarPaginacao(p, &t, &consultaComFiltro)
 	if err != nil {
 		return res, err
 	}
