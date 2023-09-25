@@ -42,3 +42,8 @@ func (r *repo) AtualizarCartao(req *cartao.Cartao, id *uuid.UUID) error {
 func (r *repo) RemoverCartao(id *uuid.UUID) error {
 	return r.Data.RemoverCartao(id)
 }
+
+// ReativarCartao é um gerenciador de fluxo de dados para reativar um cartão no banco de dados
+func (r *repo) ReativarCartao(id *uuid.UUID) error {
+	return r.Data.ReativarCartao(id)
+}

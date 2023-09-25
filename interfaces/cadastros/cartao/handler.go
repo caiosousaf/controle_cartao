@@ -102,3 +102,21 @@ func removerCartao(c *gin.Context) {
 
 	c.JSON(http.StatusOK, nil)
 }
+
+// reativarCartao godoc
+func reativarCartao(c *gin.Context) {
+	id, err := utils.GetUUIDFromParam(c, "cartao_id")
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	if err := cartao.ReativarCartao(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}

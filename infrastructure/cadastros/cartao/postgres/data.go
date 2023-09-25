@@ -112,3 +112,25 @@ func (pg *DBCartao) RemoverCartao(id *uuid.UUID) (err error) {
 
 	return
 }
+
+// ReativarCartao reativa os dados de um cartão no banco de dados dado o seu id
+func (pg *DBCartao) ReativarCartao(id *uuid.UUID) (err error) {
+	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_cartao").
+		Set("data_desativacao", nil).
+		Where(sq.Eq{
+			"id": id,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("ID do cartão inexistente")
+	}
+
+	return
+}

@@ -186,3 +186,23 @@ func RemoverCartao(id *uuid.UUID) (err error) {
 
 	return
 }
+
+// ReativarCartao contém a regra de negócio para reativar um cartão
+func ReativarCartao(id *uuid.UUID) (err error) {
+	const msgErrPadrao = "Erro ao reativar cartão"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	defer db.Close()
+
+	repo := cartao.NovoRepo(db)
+
+	if err := repo.ReativarCartao(id); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}
