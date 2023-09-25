@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	host     = "ec2-23-23-151-191.compute-1.amazonaws.com"
+	host     = "localhost"
 	port     = 5432
-	user     = "icsebrcphzbchf"
-	password = "02fde9fd34225b556aed45e81ca823f3c50b594f2530b3f95e8d2b1fe6517473"
-	dbname   = "dcqvoffgfp6u50"
+	user     = "postgres"
+	password = "1213"
+	dbname   = "controle_cartao"
 )
 
-func Conectar() *sql.DB {
+func Conectar() (*sql.DB, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=require",
+		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
 	db, err := sql.Open("postgres", psqlInfo)
@@ -31,5 +31,5 @@ func Conectar() *sql.DB {
 		panic(err)
 	}
 
-	return db
+	return db, err
 }
