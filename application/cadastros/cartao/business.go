@@ -40,6 +40,7 @@ func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
 		return id, utils.Wrap(err, msgErrPadraoListagem)
 	}
 
+	// Verifica se já existe algum cartão com esse nome
 	if len(lista.Dados) > 0 {
 		if lista.Dados[0].DataDesativacao != nil {
 
