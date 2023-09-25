@@ -1,6 +1,9 @@
 package cartao
 
-import "github.com/gin-gonic/gin"
+import (
+	"controle_cartao/interfaces/cadastros/faturas"
+	"github.com/gin-gonic/gin"
+)
 
 // Router é um router para as rotas de cartões que não utilizam ID
 func Router(r *gin.RouterGroup) {
@@ -10,8 +13,9 @@ func Router(r *gin.RouterGroup) {
 
 // RouterWithID é um router para as rotas de cartões que utilizam ID
 func RouterWithID(r *gin.RouterGroup) {
-	r.GET(":cartao_id", buscarCartao)
-	r.PUT(":cartao_id", atualizarCartao)
-	r.PUT(":cartao_id/remover", removerCartao)
-	r.PUT(":cartao_id/reativar", reativarCartao)
+	r.GET("", buscarCartao)
+	r.PUT("", atualizarCartao)
+	r.PUT("/remover", removerCartao)
+	r.PUT("/reativar", reativarCartao)
+	faturas.Router(r.Group("faturas"))
 }

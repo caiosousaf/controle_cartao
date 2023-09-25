@@ -10,10 +10,10 @@ import (
 
 const (
 	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "1213"
-	dbname   = "controle_cartao"
+	port     = 7007
+	user     = "cana_user"
+	password = "dev123456"
+	dbname   = "cana"
 )
 
 func Conectar() (*sql.DB, error) {
