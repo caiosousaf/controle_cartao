@@ -37,3 +37,34 @@ func ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res *ResPag, err e
 
 	return
 }
+
+// BuscarFaturaCartao contém a regra de negócio para buscar uma fatura de um cartão dado os id's fornecidos
+func BuscarFaturaCartao(idFatura, idCartao *uuid.UUID) (res *Res, err error) {
+	const msgErrPadrao = "Erro ao buscar fatura de cartão"
+
+	res = new(Res)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return res, err
+	}
+	defer db.Close()
+
+	repo := faturas.NovoRepo(db)
+
+	buscaFatura, err := repo.BuscarFaturaCartao(idFatura, idCartao)
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+
+	res = &Res{
+		ID:             buscaFatura.ID,
+		Nome:           buscaFatura.Nome,
+		FaturaCartaoID: buscaFatura.FaturaCartaoID,
+		NomeCartao:     buscaFatura.NomeCartao,
+		DataCriacao:    buscaFatura.DataCriacao,
+		DataVencimento: buscaFatura.DataVencimento,
+	}
+
+	return
+}

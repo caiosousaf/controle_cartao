@@ -22,3 +22,8 @@ func novoRepo(novoDB *sql.DB) *repo {
 func (r *repo) ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (*faturas.FaturaPag, error) {
 	return r.Data.ListarFaturasCartao(p, id)
 }
+
+// BuscarFaturaCartao é um gerenciador de fluxo de dados para buscar a fatura de um cartão no banco de dados
+func (r *repo) BuscarFaturaCartao(idFatura, idCartao *uuid.UUID) (*faturas.Fatura, error) {
+	return r.Data.BuscarFaturaCartao(idFatura, idCartao)
+}
