@@ -32,3 +32,8 @@ func (r *repo) BuscarFaturaCartao(idFatura, idCartao *uuid.UUID) (*faturas.Fatur
 func (r *repo) ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error) {
 	return r.Data.ObterProximasFaturas(qtd_parcelas, idFatura)
 }
+
+// VerificarFaturaCartao é um gerenciador de fluxo de dados para verificar se existe uma fatura de cartão para a data selecionada no banco de dados
+func (r *repo) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (*uuid.UUID, error) {
+	return r.Data.VerificarFaturaCartao(data, idCartao)
+}
