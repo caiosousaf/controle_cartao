@@ -49,7 +49,7 @@ func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res
 }
 
 // BuscarFaturaCartao busca os dados de uma fatura de um cartão no banco de dados dado os ID's fornecidos
-func (pg *DBFatura) BuscarFaturaCartao(idFatura, idCartao *uuid.UUID) (res *model.Fatura, err error) {
+func (pg *DBFatura) BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (res *model.Fatura, err error) {
 	res = new(model.Fatura)
 	if err = sq.StatementBuilder.RunWith(pg.DB).Select(`TFC.id, TFC.nome, TFC.fatura_cartao_id,
 				TC.nome, TFC.data_criacao, TFC.data_vencimento`).
@@ -118,10 +118,22 @@ func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (ca
               				WHERE EXTRACT(MONTH FROM TFC.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)
                 			AND TC.id = '%v')`, *data, idCartao))
 
-	fmt.Println(utils.SelectBuilderToString(consultaSql))
-
 	if err = consultaSql.QueryRow().Scan(&cartaoID); err != nil {
 		return cartaoID, err
+	}
+
+	return
+}
+
+// CadastrarFatura cadastra uma nova fatura de cartão no banco de dados
+func (pg *DBFatura) CadastrarFatura(req *model.Fatura) (err error) {
+	if err = sq.StatementBuilder.RunWith(pg.DB).Insert("public.t_fatura_cartao").
+		Columns("nome", "fatura_cartao_id", "data_vencimento").
+		Values(req.Nome, req.FaturaCartaoID, req.DataVencimento).
+		Suffix(`RETURNING "id"`).
+		PlaceholderFormat(sq.Dollar).
+		Scan(&req.ID); err != nil {
+		return err
 	}
 
 	return

@@ -1,5 +1,20 @@
 package utils
 
+import "time"
+
+func ObterNumeroDoMes(dataStr string) (int, error) {
+	// Parse a string no formato "YYYY-MM-DD" para uma data
+	data, err := time.Parse("2006-01-02", dataStr)
+	if err != nil {
+		return 0, err // Retorna 0 e o erro se houver um problema na conversão
+	}
+
+	// Extraia o número do mês da data (1 a 12)
+	mes := data.Month()
+
+	return int(mes), nil
+}
+
 // NumeroParaNomeMes recebe um inteiro e retorna o mês referente aquele inteiro
 func NumeroParaNomeMes(numero int) string {
 	meses := map[int]string{

@@ -56,3 +56,31 @@ func buscarFaturaCartao(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+// cadastrarFatura godoc
+func cadastrarFatura(c *gin.Context) {
+	var req faturas.Req
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	idCartao, err := utils.GetUUIDFromParam(c, "cartao_id")
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	req.FaturaCartaoID = idCartao
+
+	id, err := faturas.CadastrarFatura(&req)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, id)
+}
