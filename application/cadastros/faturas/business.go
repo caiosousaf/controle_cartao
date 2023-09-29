@@ -72,7 +72,7 @@ func BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (res *Res, err error) {
 }
 
 // CadastrarFatura contém a regra de negócio para cadastrar uma nova fatura
-func CadastrarFatura(req *Req) (id *uuid.UUID, err error) {
+func CadastrarFatura(req *Req, idCartao *uuid.UUID) (id *uuid.UUID, err error) {
 	const (
 		msgErrPadrao                = "Erro ao cadastrar nova fatura"
 		msgErrPadraoVerificarFatura = "Erro ao verificar se já existe fatura cadastrada para o mês de vencimento"
@@ -96,6 +96,7 @@ func CadastrarFatura(req *Req) (id *uuid.UUID, err error) {
 	mesStringFormatado := utils.NumeroParaNomeMes(numeroMesVencimento)
 
 	req.Nome = utils.GetStringPointer(mesStringFormatado)
+	req.FaturaCartaoID = idCartao
 
 	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
 		return id, utils.Wrap(err, msgErrPadrao)
@@ -115,6 +116,54 @@ func CadastrarFatura(req *Req) (id *uuid.UUID, err error) {
 		}
 	} else {
 		return id, utils.NewErr("Fatura do mês escolhido já existe")
+	}
+
+	return
+}
+
+// AtualizarFatura contém a regra de negócio para atualizar uma fatura
+func AtualizarFatura(req *ReqAtualizar, idCartao, idFatura *uuid.UUID) (err error) {
+	const (
+		msgErrPadrao                = "Erro ao atualizar fatura"
+		msgErrPadraoVerificarFatura = "Erro ao verificar se já existe fatura cadastrada para o mês de vencimento"
+	)
+
+	var reqInfra = new(infra.Fatura)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	repo := faturas.NovoRepo(db)
+
+	numeroMesVencimento, err := utils.ObterNumeroDoMes(*req.DataVencimento)
+	if err != nil {
+		return err
+	}
+
+	mesStringFormatado := utils.NumeroParaNomeMes(numeroMesVencimento)
+
+	req.Nome = utils.GetStringPointer(mesStringFormatado)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	cartaoID, err := repo.VerificarFaturaCartao(req.DataVencimento, idCartao)
+
+	if err != nil {
+		if err == sql.ErrNoRows && cartaoID == nil {
+			if err = repo.AtualizarFatura(reqInfra, idFatura); err != nil {
+				return utils.Wrap(err, msgErrPadrao)
+			}
+
+		} else {
+			return utils.Wrap(err, msgErrPadraoVerificarFatura)
+		}
+	} else {
+		return utils.NewErr("Fatura do mês escolhido já existe")
 	}
 
 	return

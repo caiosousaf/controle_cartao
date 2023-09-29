@@ -12,6 +12,12 @@ type Req struct {
 	DataVencimento *string    `json:"data_vencimento" apelido:"data_vencimento"`
 }
 
+// ReqAtualizar modela uma requisição para a atualização de uma fatura
+type ReqAtualizar struct {
+	Nome           *string `json:"nome" apelido:"nome"`
+	DataVencimento *string `json:"data_vencimento" apelido:"data_vencimento"`
+}
+
 // Res modela uma resposta para listagem e busca de faturas de um cartão
 type Res struct {
 	ID             *uuid.UUID `json:"id" apelido:"id"`

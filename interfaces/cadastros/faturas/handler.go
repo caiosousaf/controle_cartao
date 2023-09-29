@@ -73,9 +73,7 @@ func cadastrarFatura(c *gin.Context) {
 		return
 	}
 
-	req.FaturaCartaoID = idCartao
-
-	id, err := faturas.CadastrarFatura(&req)
+	id, err := faturas.CadastrarFatura(&req, idCartao)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
@@ -83,4 +81,36 @@ func cadastrarFatura(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, id)
+}
+
+// atualizarFatura godoc
+func atualizarFatura(c *gin.Context) {
+	var req faturas.ReqAtualizar
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	idCartao, err := utils.GetUUIDFromParam(c, "cartao_id")
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	idFatura, err := utils.GetUUIDFromParam(c, "fatura_id")
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	if err := faturas.AtualizarFatura(&req, idCartao, idFatura); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }

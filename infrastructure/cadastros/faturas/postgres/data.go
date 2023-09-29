@@ -138,3 +138,30 @@ func (pg *DBFatura) CadastrarFatura(req *model.Fatura) (err error) {
 
 	return
 }
+
+// AtualizarFatura atualiza uma fatura de cartão no banco de dados
+func (pg *DBFatura) AtualizarFatura(req *model.Fatura, idFatura *uuid.UUID) (err error) {
+	consultaUpdate := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_fatura_cartao").
+		Set("nome", req.Nome).
+		Set("data_vencimento", req.DataVencimento).
+		Where(sq.Eq{
+			"id": idFatura,
+		}).
+		PlaceholderFormat(sq.Dollar)
+
+	result, err := consultaUpdate.Exec()
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Fatura com o ID informado não existe")
+	}
+
+	return
+}

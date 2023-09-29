@@ -13,4 +13,5 @@ type IFatura interface {
 	ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error)
 	VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (*uuid.UUID, error)
 	CadastrarFatura(req *faturas.Fatura) error
+	AtualizarFatura(req *faturas.Fatura, idFatura *uuid.UUID) error
 }

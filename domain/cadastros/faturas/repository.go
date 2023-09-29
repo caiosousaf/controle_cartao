@@ -42,3 +42,8 @@ func (r *repo) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (*uuid.U
 func (r *repo) CadastrarFatura(req *faturas.Fatura) error {
 	return r.Data.CadastrarFatura(req)
 }
+
+// AtualizarFatura é um gerenciador de fluxo de dados para atualizar uma fatura no banco de dados
+func (r *repo) AtualizarFatura(req *faturas.Fatura, idFatura *uuid.UUID) error {
+	return r.Data.AtualizarFatura(req, idFatura)
+}
