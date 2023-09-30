@@ -6,6 +6,7 @@ import (
 	infra "controle_cartao/infrastructure/cadastros/faturas"
 	"controle_cartao/utils"
 	"database/sql"
+	"fmt"
 	"github.com/google/uuid"
 )
 
@@ -165,6 +166,57 @@ func AtualizarFatura(req *ReqAtualizar, idCartao, idFatura *uuid.UUID) (err erro
 		}
 	} else {
 		return utils.NewErr("Fatura do mês escolhido já existe")
+	}
+
+	return
+}
+
+// AtualizarStatusFatura contém a regra de negócio para atualizar o status de uma fatura
+func AtualizarStatusFatura(req *ReqAtualizarStatus, idFatura *uuid.UUID) (err error) {
+	const (
+		msgErrPadrao       = "Erro ao atualizar status de fatura"
+		msgErrBuscarFatura = "Erro ao buscar fatura"
+	)
+
+	var reqInfra = new(infra.Fatura)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	repo := faturas.NovoRepo(db)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	buscaFatura, err := repo.BuscarFatura(idFatura)
+	if err != nil {
+		return utils.Wrap(err, msgErrBuscarFatura)
+	}
+
+	if *buscaFatura.Status != FaturaPaga {
+		if *buscaFatura.Status == FaturaAtrasada && *req.Status != FaturaEmAberto {
+			if err = repo.AtualizarStatusFatura(reqInfra, idFatura); err != nil {
+				return utils.Wrap(err, msgErrPadrao)
+			}
+		} else if *buscaFatura.Status == FaturaAtrasada && *req.Status == FaturaEmAberto {
+			return utils.NewErr("Operação inválida, Fatura se encontra em atraso")
+		} else if *buscaFatura.Status == FaturaEmAberto {
+			if err = repo.AtualizarStatusFatura(reqInfra, idFatura); err != nil {
+				return utils.Wrap(err, msgErrPadrao)
+			}
+		}
+
+	} else {
+		return utils.NewErr("Não é possível alterar status, Fatura já paga")
+	}
+
+	fmt.Println("oi")
+	if err = repo.AtualizarStatusFatura(reqInfra, idFatura); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
 	}
 
 	return

@@ -67,6 +67,23 @@ func (pg *DBFatura) BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (res *mode
 	return
 }
 
+// BuscarFatura busca os dados de uma fatura de um cartão no banco de dados dado os ID's fornecidos
+func (pg *DBFatura) BuscarFatura(idFatura *uuid.UUID) (res *model.Fatura, err error) {
+	res = new(model.Fatura)
+	if err = sq.StatementBuilder.RunWith(pg.DB).Select(`TFC.id, TFC.nome, TFC.fatura_cartao_id,
+				TC.nome, TFC.status, TFC.data_criacao, TFC.data_vencimento`).
+		From("public.t_fatura_cartao TFC").
+		Join("public.t_cartao TC on TC.id = TFC.fatura_cartao_id").
+		Where(sq.Eq{
+			"TFC.id": idFatura,
+		}).PlaceholderFormat(sq.Dollar).
+		Scan(&res.ID, &res.Nome, &res.FaturaCartaoID, &res.NomeCartao, &res.Status, &res.DataCriacao, &res.DataVencimento); err != nil {
+		return res, err
+	}
+
+	return
+}
+
 // ObterProximasFaturas obtém as próximas possíveis datas de faturas de um cartão no banco de dados
 func (pg *DBFatura) ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error) {
 	var (
@@ -167,4 +184,26 @@ func (pg *DBFatura) AtualizarFatura(req *model.Fatura, idFatura *uuid.UUID) (err
 }
 
 // AtualizarStatusFatura atualiza o status de uma fatura de cartão no banco de dados
-//func (pg *DBFatura) AtualizarStatusFatura()
+func (pg *DBFatura) AtualizarStatusFatura(req *model.Fatura, idFatura *uuid.UUID) (err error) {
+	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_fatura_cartao").
+		Set("status", req.Status).
+		Where(sq.Eq{
+			"id": idFatura,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Não foi possível identificar a fatura pelo ID informado")
+	}
+
+	return
+}

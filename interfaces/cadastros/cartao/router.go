@@ -17,6 +17,6 @@ func RouterWithID(r *gin.RouterGroup) {
 	r.PUT("", atualizarCartao)
 	r.PUT("/remover", removerCartao)
 	r.PUT("/reativar", reativarCartao)
-	faturas.Router(r.Group("faturas"))
-	faturas.RouterWithID(r.Group("fatura/:fatura_id"))
+	faturas.RouterCard(r.Group("faturas"))
+	faturas.RouterWithCardID(r.Group("fatura/:fatura_id"))
 }

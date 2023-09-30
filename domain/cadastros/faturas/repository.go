@@ -28,6 +28,11 @@ func (r *repo) BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (*faturas.Fatur
 	return r.Data.BuscarFaturaCartao(idCartao, idFatura)
 }
 
+// BuscarFatura é um gerenciador de fluxo de dados para buscar a fatura de um cartão no banco de dados
+func (r *repo) BuscarFatura(idFatura *uuid.UUID) (*faturas.Fatura, error) {
+	return r.Data.BuscarFatura(idFatura)
+}
+
 // ObterProximasFaturas é um gerenciador de fluxo de dados para obter as próximas faturas de um cartão no banco de dados
 func (r *repo) ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error) {
 	return r.Data.ObterProximasFaturas(qtd_parcelas, idFatura)
@@ -46,4 +51,9 @@ func (r *repo) CadastrarFatura(req *faturas.Fatura) error {
 // AtualizarFatura é um gerenciador de fluxo de dados para atualizar uma fatura no banco de dados
 func (r *repo) AtualizarFatura(req *faturas.Fatura, idFatura *uuid.UUID) error {
 	return r.Data.AtualizarFatura(req, idFatura)
+}
+
+// AtualizarStatusFatura é um gerenciador de fluxo de dados para atualizar o status de uma fatura no banco de dados
+func (r *repo) AtualizarStatusFatura(req *faturas.Fatura, idFatura *uuid.UUID) error {
+	return r.Data.AtualizarStatusFatura(req, idFatura)
 }

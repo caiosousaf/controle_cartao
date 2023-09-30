@@ -18,6 +18,11 @@ type ReqAtualizar struct {
 	DataVencimento *string `json:"data_vencimento" apelido:"data_vencimento"`
 }
 
+// ReqAtualizarStatus modela uma requisição para a atualização do status de uma fatura
+type ReqAtualizarStatus struct {
+	Status *string `json:"status" apelido:"status"`
+}
+
 // Res modela uma resposta para listagem e busca de faturas de um cartão
 type Res struct {
 	ID             *uuid.UUID `json:"id" apelido:"id"`
@@ -35,3 +40,10 @@ type ResPag struct {
 	Prox  *bool  `json:"prox,omitempty"`
 	Total *int64 `json:"total,omitempty"`
 }
+
+// Status possíveis para fatura
+const (
+	FaturaEmAberto = "Em Aberto"
+	FaturaPaga     = "Pago"
+	FaturaAtrasada = "Atrasada"
+)
