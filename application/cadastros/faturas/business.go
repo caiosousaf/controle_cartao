@@ -6,7 +6,6 @@ import (
 	infra "controle_cartao/infrastructure/cadastros/faturas"
 	"controle_cartao/utils"
 	"database/sql"
-	"fmt"
 	"github.com/google/uuid"
 )
 
@@ -214,7 +213,6 @@ func AtualizarStatusFatura(req *ReqAtualizarStatus, idFatura *uuid.UUID) (err er
 		return utils.NewErr("Não é possível alterar status, Fatura já paga")
 	}
 
-	fmt.Println("oi")
 	if err = repo.AtualizarStatusFatura(reqInfra, idFatura); err != nil {
 		return utils.Wrap(err, msgErrPadrao)
 	}
