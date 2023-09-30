@@ -34,8 +34,8 @@ func (r *repo) BuscarFatura(idFatura *uuid.UUID) (*faturas.Fatura, error) {
 }
 
 // ObterProximasFaturas é um gerenciador de fluxo de dados para obter as próximas faturas de um cartão no banco de dados
-func (r *repo) ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error) {
-	return r.Data.ObterProximasFaturas(qtd_parcelas, idFatura)
+func (r *repo) ObterProximasFaturas(parcela_atual, qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error) {
+	return r.Data.ObterProximasFaturas(parcela_atual, qtd_parcelas, idFatura)
 }
 
 // VerificarFaturaCartao é um gerenciador de fluxo de dados para verificar se existe uma fatura de cartão para a data selecionada no banco de dados

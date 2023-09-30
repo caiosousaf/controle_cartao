@@ -85,10 +85,11 @@ func (pg *DBFatura) BuscarFatura(idFatura *uuid.UUID) (res *model.Fatura, err er
 }
 
 // ObterProximasFaturas obtém as próximas possíveis datas de faturas de um cartão no banco de dados
-func (pg *DBFatura) ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error) {
+func (pg *DBFatura) ObterProximasFaturas(parcela_atual, qtd_parcelas *int64, idFatura *uuid.UUID) (datas, meses []string, idCartao *uuid.UUID, err error) {
 	var (
-		data time.Time
-		mes  int
+		data       time.Time
+		mes        int
+		valorLimit = *qtd_parcelas - *parcela_atual
 	)
 	consultaSelect := fmt.Sprintf(`GENERATE_SERIES(TFC.data_vencimento, TFC.data_vencimento + INTERVAL '%d months' - INTERVAL '1 month',
                 		INTERVAL '1 month')::DATE, TC.id,
@@ -100,7 +101,8 @@ func (pg *DBFatura) ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUI
 		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id").
 		Where(sq.Eq{
 			"TFC.id": idFatura,
-		}).PlaceholderFormat(sq.Dollar)
+		}).PlaceholderFormat(sq.Dollar).
+		Limit(uint64(valorLimit) + 1)
 
 	rows, err := consultaSql.Query()
 	if err != nil {

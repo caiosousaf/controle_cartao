@@ -40,7 +40,7 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 		return idCompra, utils.Wrap(err, msgErrPadrao)
 	}
 
-	datas, meses, idCartao, err := repoFatura.ObterProximasFaturas(req.QuantidadeParcelas, idFatura)
+	datas, meses, idCartao, err := repoFatura.ObterProximasFaturas(req.ParcelaAtual, req.QuantidadeParcelas, idFatura)
 	if err != nil {
 		return idCompra, utils.Wrap(err, msgErrProxFaturas)
 	}
@@ -66,6 +66,7 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 			return idCompra, utils.Wrap(err, msgErrVerificarFatura)
 		}
 
+		reqInfra.FaturaID = idFatura
 		if err := repo.CadastrarCompra(reqInfra); err != nil {
 			return idCompra, utils.Wrap(err, msgErrPadrao)
 		}
