@@ -12,5 +12,3 @@ func Router(r *gin.RouterGroup) {
 	cartao.RouterWithID(r.Group("cartao/:cartao_id"))
 	faturas.RouterWithID(r.Group("fatura/:fatura_id"))
 }
-
-//

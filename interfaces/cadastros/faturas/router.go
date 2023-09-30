@@ -1,6 +1,9 @@
 package faturas
 
-import "github.com/gin-gonic/gin"
+import (
+	"controle_cartao/interfaces/cadastros/compras"
+	"github.com/gin-gonic/gin"
+)
 
 // RouterCard é um router para as rotas de faturas que não utilizam ID da fatura mas utilizam id do cartão
 func RouterCard(r *gin.RouterGroup) {
@@ -17,4 +20,5 @@ func RouterWithCardID(r *gin.RouterGroup) {
 // RouterWithID é um router para as rotas de faturas que utilizam ID da fatura
 func RouterWithID(r *gin.RouterGroup) {
 	r.PUT("status", atualizarStatusFatura)
+	compras.RouterInvoice(r.Group("compras"))
 }

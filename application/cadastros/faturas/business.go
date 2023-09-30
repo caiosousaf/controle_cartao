@@ -152,10 +152,10 @@ func AtualizarFatura(req *ReqAtualizar, idCartao, idFatura *uuid.UUID) (err erro
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
-	cartaoID, err := repo.VerificarFaturaCartao(req.DataVencimento, idCartao)
+	faturaID, err := repo.VerificarFaturaCartao(req.DataVencimento, idCartao)
 
 	if err != nil {
-		if err == sql.ErrNoRows && cartaoID == nil {
+		if err == sql.ErrNoRows && faturaID == nil {
 			if err = repo.AtualizarFatura(reqInfra, idFatura); err != nil {
 				return utils.Wrap(err, msgErrPadrao)
 			}

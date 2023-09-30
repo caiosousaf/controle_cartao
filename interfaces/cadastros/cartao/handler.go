@@ -23,7 +23,7 @@ func cadastrarCartao(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, id)
+	c.JSON(http.StatusCreated, id)
 }
 
 // listarCartoes godoc

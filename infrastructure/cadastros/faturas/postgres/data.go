@@ -125,7 +125,7 @@ func (pg *DBFatura) ObterProximasFaturas(qtd_parcelas *int64, idFatura *uuid.UUI
 }
 
 // VerificarFaturaCartao verifica se existe fatura de um cartão para a data escolhida
-func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (cartaoID *uuid.UUID, err error) {
+func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (faturaID *uuid.UUID, err error) {
 	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select("id").
 		From("public.t_fatura_cartao T").
 		Where(fmt.Sprintf("EXTRACT(MONTH FROM T.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)", *data)).
@@ -135,8 +135,8 @@ func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (ca
               				WHERE EXTRACT(MONTH FROM TFC.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)
                 			AND TC.id = '%v')`, *data, idCartao))
 
-	if err = consultaSql.QueryRow().Scan(&cartaoID); err != nil {
-		return cartaoID, err
+	if err = consultaSql.QueryRow().Scan(&faturaID); err != nil {
+		return faturaID, err
 	}
 
 	return
