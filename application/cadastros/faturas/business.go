@@ -64,6 +64,7 @@ func BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (res *Res, err error) {
 		Nome:           buscaFatura.Nome,
 		FaturaCartaoID: buscaFatura.FaturaCartaoID,
 		NomeCartao:     buscaFatura.NomeCartao,
+		Status:         buscaFatura.Status,
 		DataCriacao:    buscaFatura.DataCriacao,
 		DataVencimento: buscaFatura.DataVencimento,
 	}

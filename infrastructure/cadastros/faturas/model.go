@@ -11,6 +11,7 @@ type Fatura struct {
 	Nome           *string    `alias:"TFC" sql:"nome" apelido:"nome"`
 	FaturaCartaoID *uuid.UUID `alias:"TFC" sql:"fatura_cartao_id" apelido:"cartao_id"`
 	NomeCartao     *string    `alias:"TC" sql:"nome" apelido:"nome_cartao"`
+	Status         *string    `alias:"TFC" sql:"status" apelido:"status"`
 	DataCriacao    *time.Time `alias:"TFC" sql:"data_criacao" apelido:"data_criacao"`
 	DataVencimento *string    `alias:"TFC" sql:"data_vencimento" apelido:"data_vencimento"`
 }

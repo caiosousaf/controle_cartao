@@ -24,6 +24,7 @@ type Res struct {
 	Nome           *string    `json:"nome" apelido:"nome"`
 	FaturaCartaoID *uuid.UUID `json:"fatura_cartao_id" apelido:"cartao_id"`
 	NomeCartao     *string    `json:"nome_cartao" apelido:"nome_cartao"`
+	Status         *string    `json:"status" apelido:"status"`
 	DataCriacao    *time.Time `json:"data_criacao" apelido:"data_criacao"`
 	DataVencimento *string    `json:"data_vencimento" apelido:"data_vencimento"`
 }

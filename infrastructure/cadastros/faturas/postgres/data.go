@@ -52,7 +52,7 @@ func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res
 func (pg *DBFatura) BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (res *model.Fatura, err error) {
 	res = new(model.Fatura)
 	if err = sq.StatementBuilder.RunWith(pg.DB).Select(`TFC.id, TFC.nome, TFC.fatura_cartao_id,
-				TC.nome, TFC.data_criacao, TFC.data_vencimento`).
+				TC.nome, TFC.status, TFC.data_criacao, TFC.data_vencimento`).
 		From("public.t_fatura_cartao TFC").
 		Join("public.t_cartao TC on TC.id = TFC.fatura_cartao_id").
 		Where(sq.Eq{
@@ -60,7 +60,7 @@ func (pg *DBFatura) BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (res *mode
 			"TFC.id":               idFatura,
 			"TC.data_desativacao":  nil,
 		}).PlaceholderFormat(sq.Dollar).
-		Scan(&res.ID, &res.Nome, &res.FaturaCartaoID, &res.NomeCartao, &res.DataCriacao, &res.DataVencimento); err != nil {
+		Scan(&res.ID, &res.Nome, &res.FaturaCartaoID, &res.NomeCartao, &res.Status, &res.DataCriacao, &res.DataVencimento); err != nil {
 		return res, err
 	}
 
@@ -165,3 +165,6 @@ func (pg *DBFatura) AtualizarFatura(req *model.Fatura, idFatura *uuid.UUID) (err
 
 	return
 }
+
+// AtualizarStatusFatura atualiza o status de uma fatura de cartão no banco de dados
+//func (pg *DBFatura) AtualizarStatusFatura()
