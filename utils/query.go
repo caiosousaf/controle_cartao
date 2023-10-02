@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"database/sql"
 	sq "github.com/Masterminds/squirrel"
 	"reflect"
 )
@@ -11,16 +10,11 @@ func ConfigurarPaginacao(p *Parametros, model interface{}, query *sq.SelectBuild
 	slice := reflect.MakeSlice(reflect.SliceOf(modelType), 0, 0)
 	if p.Total {
 		var total int64
-		var rows *sql.Rows
-		rows, err = query.
-			Query()
-
+		err = query.
+			QueryRow().
+			Scan(&total)
 		if err != nil {
 			return
-		}
-
-		for rows.Next() {
-			total++
 		}
 
 		count = &total

@@ -99,3 +99,34 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 
 	return
 }
+
+// ListarCompras contém a regra de negócio para listar as compras
+func ListarCompras(params *utils.Parametros) (res *ResComprasPag, err error) {
+	const msgErrPadrao = "Erro ao listar compras"
+
+	res = new(ResComprasPag)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return res, err
+	}
+	defer db.Close()
+
+	repo := compras.NovoRepo(db)
+
+	listaCompras, err := repo.ListarCompras(params)
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+
+	res.Dados = make([]ResCompras, len(listaCompras.Dados))
+	for i := 0; i < len(listaCompras.Dados); i++ {
+		if err = utils.ConvertStructByAlias(&listaCompras.Dados[i], &res.Dados[i]); err != nil {
+			return res, utils.Wrap(err, msgErrPadrao)
+		}
+	}
+
+	res.Total, res.Prox = listaCompras.Total, listaCompras.Prox
+
+	return
+}

@@ -33,7 +33,12 @@ func (pg *DBCartao) ListarCartoes(p *utils.Parametros) (res *model.CartaoPag, er
 
 	res = new(model.CartaoPag)
 
-	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select("TC.id, TC.nome, TC.data_criacao, TC.data_desativacao").
+	campos, _, err := p.ValidFields(&t)
+	if err != nil {
+		return res, err
+	}
+
+	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select(campos...).
 		From("public.t_cartao TC")
 
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
