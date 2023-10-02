@@ -283,3 +283,12 @@ func GetUUIDFromParam(c *gin.Context, paramName string) (*uuid.UUID, error) {
 	}
 	return &uuidObj, nil
 }
+
+// TemFiltro verifica se o filtro enviado existe
+func (p *Parametros) TemFiltro(f string) (temFiltro bool) {
+	if _, existe := p.Filtros[f]; existe {
+		return true
+	}
+
+	return
+}
