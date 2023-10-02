@@ -9,15 +9,19 @@ import (
 	"controle_cartao/utils"
 	"database/sql"
 	"github.com/google/uuid"
+	"time"
 )
 
 // CadastrarCompra contém a regra de negócio para cadastrar uma nova compra
 func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err error) {
 	const (
-		msgErrPadrao          = "Erro ao cadastrar nova compra"
-		msgErrProxFaturas     = "Erro ao obter as próximas faturas"
-		msgErrVerificarFatura = "Erro ao verificar fatura"
-		msgErrCadastrarFatura = "Erro ao cadastrar nova fatura"
+		msgErrPadrao                  = "Erro ao cadastrar nova compra"
+		msgErrProxFaturas             = "Erro ao obter as próximas faturas"
+		msgErrVerificarFatura         = "Erro ao verificar fatura"
+		msgErrCadastrarFatura         = "Erro ao cadastrar nova fatura"
+		msgErrBuscarFatura            = "Erro ao buscar fatura"
+		formatoDataEsperado           = "2006-01-02"
+		formatoDataVencimentoEsperado = "2006-01-02T15:04:05Z07:00"
 	)
 
 	var (
@@ -38,6 +42,25 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 
 	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
 		return idCompra, utils.Wrap(err, msgErrPadrao)
+	}
+
+	buscaFatura, err := repoFatura.BuscarFatura(idFatura)
+	if err != nil {
+		return idCompra, utils.Wrap(err, msgErrBuscarFatura)
+	}
+
+	dataCompraData, err := time.Parse(formatoDataEsperado, *reqInfra.DataCompra)
+	if err != nil {
+		return nil, utils.NewErr("Erro ao converter data compra. A data inserida é inválida. Ex: 02/01/2006")
+	}
+
+	dataVencimentoData, err := time.Parse(formatoDataVencimentoEsperado, *buscaFatura.DataVencimento)
+	if err != nil {
+		return idCompra, utils.NewErr("Erro ao converter data vencimento. A data inserida é inválida. Ex: 02/01/2006")
+	}
+
+	if dataVencimentoData.Before(dataCompraData) {
+		return idCompra, utils.NewErr("Data da compra deve ser menor que a data de vencimento da fatura")
 	}
 
 	datas, meses, idCartao, err := repoFatura.ObterProximasFaturas(req.ParcelaAtual, req.QuantidadeParcelas, idFatura)
