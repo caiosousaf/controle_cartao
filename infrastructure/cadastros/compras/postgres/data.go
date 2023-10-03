@@ -55,3 +55,27 @@ func (pg *DBCompra) ListarCompras(params *utils.Parametros) (res *model.ComprasP
 
 	return
 }
+
+// ObterTotalComprasValor obtém o total de compras dado os seus filtros no banco de dados
+func (pg *DBCompra) ObterTotalComprasValor(params *utils.Parametros) (res *model.TotalComprasValor, err error) {
+	res = new(model.TotalComprasValor)
+
+	consultaSql := sq.StatementBuilder.RunWith(pg.DB).
+		Select("COALESCE(SUM(valor_parcela), 0) AS valor_total").
+		From("public.t_compras_fatura TCF").
+		Join("public.t_fatura_cartao TFC ON TFC.id = TCF.compra_fatura_id").
+		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id")
+
+	consultaComFiltro := params.CriarFiltros(consultaSql, map[string]utils.Filtro{
+		"cartao_id": utils.CriarFiltros("TC.id = ?::UUID", utils.FlagFiltroEq),
+		"fatura_id": utils.CriarFiltros("TFC.id = ?::UUID", utils.FlagFiltroEq),
+	}).
+		PlaceholderFormat(sq.Dollar)
+
+	if err = consultaComFiltro.
+		Scan(&res.Total); err != nil {
+		return res, err
+	}
+
+	return
+}

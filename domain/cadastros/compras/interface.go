@@ -9,4 +9,5 @@ import (
 type ICompra interface {
 	CadastrarCompra(req *compras.Compras) error
 	ListarCompras(params *utils.Parametros) (*compras.ComprasPag, error)
+	ObterTotalComprasValor(params *utils.Parametros) (*compras.TotalComprasValor, error)
 }

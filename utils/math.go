@@ -17,3 +17,8 @@ func Min(valores ...int) int {
 
 	return min
 }
+
+// ArredondarParaDuasCasasDecimais torna um float64 com várias casas decimais em apenas um float com 2 casas decimais
+func ArredondarParaDuasCasasDecimais(valor *float64) {
+	*valor = math.Round(*valor*100) / 100
+}

@@ -26,3 +26,8 @@ func (r *repo) CadastrarCompra(req *compras.Compras) error {
 func (r *repo) ListarCompras(params *utils.Parametros) (*compras.ComprasPag, error) {
 	return r.Data.ListarCompras(params)
 }
+
+// ObterTotalComprasValor é um gerenciador de fluxo de dados para obter o valor total de compras dado os devidos filtros
+func (r *repo) ObterTotalComprasValor(params *utils.Parametros) (*compras.TotalComprasValor, error) {
+	return r.Data.ObterTotalComprasValor(params)
+}

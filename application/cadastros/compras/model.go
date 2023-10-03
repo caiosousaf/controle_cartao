@@ -41,3 +41,8 @@ type ResComprasPag struct {
 	Prox  *bool        `json:"prox,omitempty"`
 	Total *int64       `json:"total,omitempty"`
 }
+
+// ResTotalComprasValor modela uma estrutura para obter o valor total das compras
+type ResTotalComprasValor struct {
+	Total *float64 `json:"total" apelido:"valor_total"`
+}

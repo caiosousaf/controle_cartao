@@ -132,3 +132,29 @@ func ListarCompras(params *utils.Parametros) (res *ResComprasPag, err error) {
 
 	return
 }
+
+// ObterTotalComprasValor contém a regra de negócio para obter o total das compras
+func ObterTotalComprasValor(params *utils.Parametros) (res *ResTotalComprasValor, err error) {
+	const msgErrPadrao = "Erro ao obter o total das compras"
+
+	res = new(ResTotalComprasValor)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return res, err
+	}
+	defer db.Close()
+
+	repo := compras.NovoRepo(db)
+
+	totalCompras, err := repo.ObterTotalComprasValor(params)
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+
+	utils.ArredondarParaDuasCasasDecimais(totalCompras.Total)
+
+	res = &ResTotalComprasValor{Total: totalCompras.Total}
+
+	return
+}

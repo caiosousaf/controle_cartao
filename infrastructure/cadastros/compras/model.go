@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+// TotalComprasValor estrutura para definição de total de compras para uso na camada de dados
+type TotalComprasValor struct {
+	Total *float64 `alias:"TCF" sql:"valor_parcela" apelido:"valor_total"`
+}
+
 // Compras estrutura para definição de modelo de compra para uso na camada de dados
 type Compras struct {
 	ID                 *uuid.UUID `alias:"TCF" sql:"id" apelido:"id"`

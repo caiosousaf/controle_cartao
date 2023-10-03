@@ -49,3 +49,20 @@ func listarCompras(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+// obterTotalComprasValor godoc
+func obterTotalComprasValor(c *gin.Context) {
+	params, err := utils.ParseParams(c)
+	if err != nil {
+		return
+	}
+
+	res, err := compras.ObterTotalComprasValor(&params)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
