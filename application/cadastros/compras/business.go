@@ -51,12 +51,12 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 
 	dataCompraData, err := time.Parse(formatoDataEsperado, *reqInfra.DataCompra)
 	if err != nil {
-		return nil, utils.NewErr("Erro ao converter data compra. A data inserida é inválida. Ex: 02/01/2006")
+		return nil, utils.NewErr("Erro ao converter data compra. A data inserida é inválida. Ex: 2006-01-02")
 	}
 
 	dataVencimentoData, err := time.Parse(formatoDataVencimentoEsperado, *buscaFatura.DataVencimento)
 	if err != nil {
-		return idCompra, utils.NewErr("Erro ao converter data vencimento. A data inserida é inválida. Ex: 02/01/2006")
+		return idCompra, utils.NewErr("Erro ao converter data vencimento. A data inserida é inválida. Ex: 2006-01-02T15:04:05Z07:00")
 	}
 
 	if dataVencimentoData.Before(dataCompraData) {
@@ -95,6 +95,8 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 		}
 
 		*req.ParcelaAtual++
+
+		idCompra = reqInfra.ID
 	}
 
 	return

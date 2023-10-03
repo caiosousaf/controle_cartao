@@ -112,7 +112,7 @@ func atualizarFatura(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // atualizarStatusFatura godoc
@@ -137,5 +137,5 @@ func atualizarStatusFatura(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }

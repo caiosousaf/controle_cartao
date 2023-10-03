@@ -82,7 +82,7 @@ func atualizarCartao(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // removerCartao godoc
@@ -100,7 +100,7 @@ func removerCartao(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // reativarCartao godoc
@@ -118,5 +118,5 @@ func reativarCartao(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }
