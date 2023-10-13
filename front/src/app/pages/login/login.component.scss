@@ -1,0 +1,61 @@
+.login-container {
+  display: flex;
+  gap: 100px;
+
+  .sign-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    align-items: center;
+
+    h1 {
+      color: var(--black-25, #444b59);
+      font-family: Overpass;
+      font-size: 36px;
+      font-style: normal;
+      font-weight: 800;
+      line-height: normal;
+      letter-spacing: 3.6px;
+    }
+
+    .signup {
+      p {
+        display: inline;
+        color: var(--black-25, #444b59);
+        font-family: Nunito;
+        font-size: 24px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 2.4px;
+      }
+
+      a {
+        color: var(--primary3, #3656b7);
+        font-family: Nunito;
+        font-size: 24px;
+        font-style: normal;
+        font-weight: 700;
+        line-height: normal;
+        letter-spacing: 2.4px;
+        text-decoration: none;
+      }
+    }
+  }
+
+  .extras-container {
+    border: 1px solid red;
+    flex: 1;
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 80px;
+    color: var(--black, #444b59);
+    text-align: right;
+    font-family: Nunito;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: 2px;
+  }
+}

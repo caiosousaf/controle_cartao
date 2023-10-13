@@ -1,1 +1,27 @@
-<p>login works!</p>
+<div class="login-container">
+  <div class="sign-container">
+    <div>
+      <h1>{{ "WELCOME" | translate }}</h1>
+      <div class="signup">
+        <p>
+          {{ "Don’t have an account" | translate }}, <a href="#">Sign up</a>
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="extras-container">
+    <div class="buttons-action">
+      <button nz-button nzType="text">{{ "Help" | translate }}</button>
+      <button nz-button nzType="text">{{ "Contact us" | translate }}</button>
+      <nz-select
+        [ngModel]="lang"
+        nzBorderless
+        (ngModelChange)="changeLang($event)"
+      >
+        <nz-option nzValue="pt-br" nzLabel="Português"></nz-option>
+        <nz-option nzValue="en" nzLabel="English"></nz-option>
+      </nz-select>
+      <button nz-button nzType="text">Sign up</button>
+    </div>
+  </div>
+</div>
