@@ -42,7 +42,8 @@ func (pg *DBCompra) ListarCompras(params *utils.Parametros) (res *model.ComprasP
 		Join("public.t_fatura_cartao TFC on TFC.id = TCF.compra_fatura_id")
 
 	consultaComFiltro := params.CriarFiltros(consultaSql, map[string]utils.Filtro{
-		"fatura_id": utils.CriarFiltros("TFC.id = ?::UUID", utils.FlagFiltroEq),
+		"fatura_id":    utils.CriarFiltros("TFC.id = ?::UUID", utils.FlagFiltroEq),
+		"categoria_id": utils.CriarFiltros("TCC.id = ?::UUID", utils.FlagFiltroEq),
 	}).
 		PlaceholderFormat(sq.Dollar)
 

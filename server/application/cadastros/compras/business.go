@@ -152,7 +152,7 @@ func ObterTotalComprasValor(params *utils.Parametros) (res *ResTotalComprasValor
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
 
-	utils.ArredondarParaDuasCasasDecimais(totalCompras.Total)
+	*totalCompras.Total = "R$ " + *totalCompras.Total
 
 	res = &ResTotalComprasValor{Total: totalCompras.Total}
 
