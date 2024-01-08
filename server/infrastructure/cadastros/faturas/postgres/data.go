@@ -32,7 +32,7 @@ func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res
 		Where(sq.Eq{
 			"TFC.fatura_cartao_id": id,
 			"TC.data_desativacao":  nil,
-		})
+		}).OrderBy("TFC.data_criacao")
 
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"nome_exato": utils.CriarFiltros("LOWER(TF.nome) = LOWER(?)", utils.FlagFiltroEq),
@@ -128,14 +128,12 @@ func (pg *DBFatura) ObterProximasFaturas(parcela_atual, qtd_parcelas *int64, idF
 
 // VerificarFaturaCartao verifica se existe fatura de um cartão para a data escolhida
 func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (faturaID *uuid.UUID, err error) {
-	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select("id").
-		From("public.t_fatura_cartao T").
-		Where(fmt.Sprintf("EXTRACT(MONTH FROM T.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)", *data)).
-		Where(fmt.Sprintf(`EXISTS (SELECT 1
-             				FROM t_fatura_cartao TFC
-              				JOIN public.t_cartao TC ON TC.id = TFC.fatura_cartao_id
-              				WHERE EXTRACT(MONTH FROM TFC.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)
-                			AND TC.id = '%v')`, *data, idCartao))
+	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select("TFC.id").
+		From("public.t_fatura_cartao TFC").
+		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id").
+		Where(fmt.Sprintf("EXTRACT(MONTH FROM TFC.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)", *data)).
+		Where(sq.Eq{"TC.id": idCartao}).
+		PlaceholderFormat(sq.Dollar)
 
 	if err = consultaSql.QueryRow().Scan(&faturaID); err != nil {
 		return faturaID, err

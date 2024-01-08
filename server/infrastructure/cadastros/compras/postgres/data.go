@@ -62,7 +62,7 @@ func (pg *DBCompra) ObterTotalComprasValor(params *utils.Parametros) (res *model
 	res = new(model.TotalComprasValor)
 
 	consultaSql := sq.StatementBuilder.RunWith(pg.DB).
-		Select("COALESCE(SUM(valor_parcela), 0) AS valor_total").
+		Select("ROUND(COALESCE(CAST(SUM(valor_parcela) AS numeric), 0), 2) AS valor_total").
 		From("public.t_compras_fatura TCF").
 		Join("public.t_fatura_cartao TFC ON TFC.id = TCF.compra_fatura_id").
 		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id")
