@@ -147,6 +147,11 @@ func ObterTotalComprasValor(params *utils.Parametros) (res *ResTotalComprasValor
 
 	repo := compras.NovoRepo(db)
 
+	if params.TemFiltro("ultima_parcela") && !params.TemFiltro("data_especifica") {
+		err = utils.NewErr("Erro ao filtrar, filtro 'data_especifica' é obrigatório ao ser passado o filtro 'ultima_parcela'")
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+
 	totalCompras, err := repo.ObterTotalComprasValor(params)
 	if err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
