@@ -68,8 +68,9 @@ func (pg *DBCompra) ObterTotalComprasValor(params *utils.Parametros) (res *model
 		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id")
 
 	consultaComFiltro := params.CriarFiltros(consultaSql, map[string]utils.Filtro{
-		"cartao_id": utils.CriarFiltros("TC.id = ?::UUID", utils.FlagFiltroEq),
-		"fatura_id": utils.CriarFiltros("TFC.id = ?::UUID", utils.FlagFiltroEq),
+		"cartao_id":      utils.CriarFiltros("TC.id = ?::UUID", utils.FlagFiltroEq),
+		"fatura_id":      utils.CriarFiltros("TFC.id = ?::UUID", utils.FlagFiltroEq),
+		"mes_especifico": utils.CriarFiltros("TO_CHAR(TFC.data_vencimento, 'MM/YYYY') = ?", utils.FlagFiltroEq),
 	}).
 		PlaceholderFormat(sq.Dollar)
 
