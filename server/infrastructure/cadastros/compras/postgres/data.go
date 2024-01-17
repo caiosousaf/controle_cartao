@@ -65,14 +65,14 @@ func (pg *DBCompra) ObterTotalComprasValor(params *utils.Parametros) (res *model
 		Select("ROUND(COALESCE(CAST(SUM(valor_parcela) AS numeric), 0), 2) AS valor_total").
 		From("public.t_compras_fatura TCF").
 		Join("public.t_fatura_cartao TFC ON TFC.id = TCF.compra_fatura_id").
-		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id").
-		Where("TFC.status <> 'Pago'")
+		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id")
 
 	consultaComFiltro := params.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"cartao_id":       utils.CriarFiltros("TC.id = ?::UUID", utils.FlagFiltroEq),
 		"fatura_id":       utils.CriarFiltros("TFC.id = ?::UUID", utils.FlagFiltroEq),
 		"data_especifica": utils.CriarFiltros("TO_CHAR(TFC.data_vencimento, 'MM/YYYY') = ?", utils.FlagFiltroEq),
 		"ultima_parcela":  utils.CriarFiltros("(TCF.parcela_atual = TCF.qtd_parcelas) = ?::BOOLEAN", utils.FlagFiltroEq),
+		"pago":            utils.CriarFiltros("(TFC.status <> 'Pago') = ?::BOOLEAN", utils.FlagFiltroEq),
 	}).
 		PlaceholderFormat(sq.Dollar)
 
