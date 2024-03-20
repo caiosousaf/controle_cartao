@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -102,6 +103,7 @@ func ParseParams(c *gin.Context) (parametros Parametros, err error) {
 		return
 	}
 
+	fmt.Println(lim)
 	if lim <= 0 {
 		lim = MaxLimit
 	}

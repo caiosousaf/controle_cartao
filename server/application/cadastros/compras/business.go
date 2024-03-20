@@ -8,8 +8,12 @@ import (
 	infraFaturas "controle_cartao/infrastructure/cadastros/faturas"
 	"controle_cartao/utils"
 	"database/sql"
-	"github.com/google/uuid"
+	"fmt"
+	"strconv"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jung-kurt/gofpdf"
 )
 
 // CadastrarCompra contém a regra de negócio para cadastrar uma nova compra
@@ -160,6 +164,117 @@ func ObterTotalComprasValor(params *utils.Parametros) (res *ResTotalComprasValor
 	*totalCompras.Total = "R$ " + *totalCompras.Total
 
 	res = &ResTotalComprasValor{Total: totalCompras.Total}
+
+	return
+}
+
+func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err error) {
+	const (
+		tamanhoCel   = float64(18)
+		alturaCel    = float64(5)
+		msgErrPadrao = "Erro ao gerar pdf"
+	)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return pdf, err
+	}
+	defer db.Close()
+
+	repo := compras.NovoRepo(db)
+
+	params.Limite = utils.MaxLimit
+
+	listaCompras, err := repo.ListarCompras(params)
+	if err != nil {
+		return pdf, utils.Wrap(err, msgErrPadrao)
+	}
+
+	header := []string{"Nome",
+		"Local Compra",
+		"Categoria",
+		"Valor Parcela",
+		"Parcela Atual",
+		"Quantidade Parcelas",
+		"Data Compra"}
+
+	pdf, err = gerarPdf()
+
+	basePdf(pdf, listaCompras, tamanhoCel, alturaCel, header)
+
+	return
+}
+
+func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
+	pdf = gofpdf.New("P", "mm", "A4", "")
+
+	pdf.AddUTF8Font("Caviar", "", "server/font/CaviarDreams.ttf")
+	pdf.AddUTF8Font("Caviar Bold", "B", "server/font/CaviarDreams_Bold.ttf")
+	pdf.AddUTF8Font("Caviar Italic", "I", "server/font/CaviarDreams_Italic.ttf")
+	pdf.AddUTF8Font("Caviar BoldItalic", "BI", "server/font/CaviarDreams_BoldItalic.ttf")
+
+	// Configura a fonte
+	pdf.SetFont("Caviar", "", 5)
+	pdf.AddPage()
+
+	return
+}
+
+func basePdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, tamanho, altura float64, header []string) {
+	fancyTable := func() {
+
+		left := float64(40)
+
+		leftTitulo := float64(90)
+		pdf.SetX(leftTitulo)
+
+		pdf.SetFont("Caviar Bold", "B", 12)
+
+		pdf.CellFormat(tamanho, altura, fmt.Sprintf("Fatura do mês de %s", *listaCompras.Dados[0].NomeFatura), "0", 0, "C", false, 0, "")
+
+		pdf.Ln(-1)
+		pdf.Ln(-1)
+
+		pdf.SetFillColor(68, 68, 68)
+		pdf.SetTextColor(255, 255, 255)
+		// Cor das linhas
+		//pdf.SetDrawColor(128, 0, 0)
+		//pdf.SetLineWidth(.3)
+
+		pdf.SetX(left)
+
+		for _, str := range header {
+			pdf.SetFont("Caviar", "", 5)
+			pdf.CellFormat(tamanho, altura, str, "1", 0, "C", true, 0, "")
+		}
+		pdf.Ln(-1)
+		pdf.SetFillColor(224, 235, 255)
+		pdf.SetTextColor(0, 0, 0)
+
+		for _, compra := range listaCompras.Dados {
+			pdf.SetX(left)
+
+			dataCompraFormat := *compra.DataCompra
+
+			dataCompraFormat = dataCompraFormat[:10]
+
+			pdf.SetFont("Caviar", "", 5)
+
+			pdf.CellFormat(tamanho, altura, *compra.Nome, "1", 0, "C", false, 0, "")
+			pdf.CellFormat(tamanho, altura, *compra.LocalCompra, "1", 0, "C", false, 0, "")
+			pdf.CellFormat(tamanho, altura, *compra.CategoriaNome, "1", 0, "C", false, 0, "")
+			pdf.CellFormat(tamanho, altura, strconv.FormatFloat(*compra.ValorParcela, 'f', -1, 64), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(tamanho, altura, strconv.FormatInt(*compra.ParcelaAtual, 10), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(tamanho, altura, strconv.FormatInt(*compra.QuantidadeParcelas, 10), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(tamanho, altura, dataCompraFormat, "1", 0, "C", false, 0, "")
+			pdf.Ln(-1)
+		}
+
+		pdf.Ln(-1)
+	}
+
+	pdf.SetFont("Caviar", "", 5)
+	fancyTable()
 
 	return
 }
