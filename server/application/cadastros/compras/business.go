@@ -191,6 +191,10 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 	paramsFatura.Limite = utils.MaxLimit
 
 	if !params.TemFiltro("fatura_id") && params.TemFiltro("cartao_id") {
+		if params.TemFiltro("ano_exato") {
+			paramsFatura.AdicionarFiltro("ano_exato", params.Filtros["ano_exato"][0])
+		}
+
 		cartaoIdStr := params.Filtros["cartao_id"][0]
 		cartaoUuid, erro := uuid.Parse(cartaoIdStr)
 		if erro != nil {
