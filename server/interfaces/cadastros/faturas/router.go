@@ -13,12 +13,12 @@ func RouterCard(r *gin.RouterGroup) {
 
 // RouterWithCardID é um router para as rotas de faturas que utilizam ID da fatura e do cartao
 func RouterWithCardID(r *gin.RouterGroup) {
-	r.GET("", buscarFaturaCartao)
 	r.PUT("", atualizarFatura)
 }
 
 // RouterWithID é um router para as rotas de faturas que utilizam ID da fatura
 func RouterWithID(r *gin.RouterGroup) {
 	r.PUT("status", atualizarStatusFatura)
+	r.GET("", buscarFatura)
 	compras.RouterInvoice(r.Group("compras"))
 }

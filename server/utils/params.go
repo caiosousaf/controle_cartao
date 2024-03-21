@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -103,7 +102,6 @@ func ParseParams(c *gin.Context) (parametros Parametros, err error) {
 		return
 	}
 
-	fmt.Println(lim)
 	if lim <= 0 {
 		lim = MaxLimit
 	}
@@ -293,4 +291,32 @@ func (p *Parametros) TemFiltro(f string) (temFiltro bool) {
 	}
 
 	return
+}
+
+// AdicionarFiltro adiciona um filtro para Parametros
+func (p *Parametros) AdicionarFiltro(nomeFiltro string, values ...string) *Parametros {
+	if len(values) > 0 {
+		if p.Filtros == nil {
+			p.Filtros = map[string][]string{}
+		}
+		p.Filtros[nomeFiltro] = values
+	}
+
+	return p
+}
+
+// LimparFiltros limpa todos os filtros dos Parametros
+func (p *Parametros) LimparFiltros() *Parametros {
+	p.Filtros = make(map[string][]string)
+
+	return p
+}
+
+// RemoverFiltros limpara um ou todos os filtros dos parametros
+func (p *Parametros) RemoverFiltros(f ...string) *Parametros {
+	for i := range f {
+		delete(p.Filtros, f[i])
+	}
+
+	return p
 }

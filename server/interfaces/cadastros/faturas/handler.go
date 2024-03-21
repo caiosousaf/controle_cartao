@@ -31,8 +31,8 @@ func listarFaturasCartao(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// buscarFaturaCartao godoc
-func buscarFaturaCartao(c *gin.Context) {
+// buscarFatura godoc
+func buscarFatura(c *gin.Context) {
 	idFatura, err := utils.GetUUIDFromParam(c, "fatura_id")
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
@@ -40,14 +40,7 @@ func buscarFaturaCartao(c *gin.Context) {
 		return
 	}
 
-	idCartao, err := utils.GetUUIDFromParam(c, "cartao_id")
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
-		c.Abort()
-		return
-	}
-
-	res, err := faturas.BuscarFaturaCartao(idFatura, idCartao)
+	res, err := faturas.BuscarFatura(idFatura)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()

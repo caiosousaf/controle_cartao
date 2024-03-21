@@ -18,6 +18,9 @@ type Req struct {
 	DataCompra         *string    `json:"data_compra" apelido:"data_compra"`
 }
 
+// colunasPdf é a variavel que define as colunas que serão usadas no retorno do pdf
+var colunasPdf = []string{"Nome", "Local Compra", "Categoria", "Valor Parcela", "Parcela Atual", "Quantidade Parcelas", "Data Compra"}
+
 // ResCompras modela uma resposta para listagem e busca de compras
 type ResCompras struct {
 	ID                 *uuid.UUID `json:"id" apelido:"id"`

@@ -181,26 +181,56 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 	}
 	defer db.Close()
 
-	repo := compras.NovoRepo(db)
+	var (
+		repo         = compras.NovoRepo(db)
+		repoFatura   = faturas.NovoRepo(db)
+		paramsFatura = new(utils.Parametros)
+	)
 
 	params.Limite = utils.MaxLimit
+	paramsFatura.Limite = utils.MaxLimit
+
+	if !params.TemFiltro("fatura_id") && params.TemFiltro("cartao_id") {
+		cartaoIdStr := params.Filtros["cartao_id"][0]
+		cartaoUuid, erro := uuid.Parse(cartaoIdStr)
+		if erro != nil {
+			return pdf, utils.Wrap(erro, msgErrPadrao)
+		}
+
+		listaFaturas, erro := repoFatura.ListarFaturasCartao(paramsFatura, &cartaoUuid)
+		if erro != nil {
+			return pdf, utils.Wrap(erro, msgErrPadrao)
+		}
+
+		pdf, erro = gerarPdf()
+		if erro != nil {
+			return pdf, utils.Wrap(erro, msgErrPadrao)
+		}
+
+		for i := range listaFaturas.Dados {
+			params.AdicionarFiltro("fatura_id", listaFaturas.Dados[i].ID.String())
+
+			listaCompras, err := repo.ListarCompras(params)
+			if err != nil {
+				return pdf, utils.Wrap(err, msgErrPadrao)
+			}
+
+			basePdf(pdf, listaCompras, tamanhoCel, alturaCel, colunasPdf)
+
+			params.RemoverFiltros("fatura_id")
+		}
+
+		return
+	}
 
 	listaCompras, err := repo.ListarCompras(params)
 	if err != nil {
 		return pdf, utils.Wrap(err, msgErrPadrao)
 	}
 
-	header := []string{"Nome",
-		"Local Compra",
-		"Categoria",
-		"Valor Parcela",
-		"Parcela Atual",
-		"Quantidade Parcelas",
-		"Data Compra"}
-
 	pdf, err = gerarPdf()
 
-	basePdf(pdf, listaCompras, tamanhoCel, alturaCel, header)
+	basePdf(pdf, listaCompras, tamanhoCel, alturaCel, colunasPdf)
 
 	return
 }
