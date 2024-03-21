@@ -18,8 +18,12 @@ type Req struct {
 	DataCompra         *string    `json:"data_compra" apelido:"data_compra"`
 }
 
-// colunasPdf é a variavel que define as colunas que serão usadas no retorno do pdf
-var colunasPdf = []string{"Nome", "Local Compra", "Categoria", "Valor Parcela", "Parcela Atual", "Quantidade Parcelas", "Data Compra"}
+var (
+	// colunasFaturasPdf é a variavel que define as colunas que serão usadas no retorno do pdf da tabela de faturas
+	colunasFaturasPdf = []string{"Nome", "Local Compra", "Categoria", "Valor Parcela", "Parcela Atual", "Quantidade Parcelas", "Data Compra"}
+	// colunasMesesFaturasCartao é a variavel que define as colunas que serão usadas no retorno do pdf para a tabela com os meses das faturas de um cartão
+	colunasMesesFaturasCartao = []string{"Nome", "Valor", "Status"}
+)
 
 // ResCompras modela uma resposta para listagem e busca de compras
 type ResCompras struct {
