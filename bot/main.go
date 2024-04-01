@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -134,6 +135,20 @@ func getFaturas(url string) (res ResPagFaturas) {
 	return
 }
 
+// Struct para armazenar o estado da conversa do usuário
+type UserState struct {
+	ChatID         int64
+	CurrentStep    string
+	NewInvoiceData NewInvoice
+}
+
+// Struct para armazenar os dados de uma nova fatura
+type NewInvoice struct {
+	Title   string
+	Amount  float64
+	DueDate string
+}
+
 func main() {
 	const (
 		baseURLCartoes = "http://localhost:8080/cadastros/cartoes"
@@ -145,7 +160,7 @@ func main() {
 		optionsCartoes []string
 	)
 	// Inicialize o token do seu bot aqui
-	token := "MEU_TOKEN"
+	token := "6821239738:AAGyxhdn27UYG7TSm31DpS_cKo0ezbzoySA"
 
 	// Cria um novo bot com o token fornecido
 	bot, err := tgbotapi.NewBotAPI(token)
@@ -157,6 +172,8 @@ func main() {
 	bot.Debug = true
 
 	log.Printf("Autorizado como %s", bot.Self.UserName)
+
+	userStates := make(map[int64]*UserState)
 
 	// Configuração de atualização com o webhook ou polling
 	// Aqui, estamos usando a opção de polling para obter atualizações
@@ -309,5 +326,119 @@ func main() {
 			}
 		}
 
+		processCreateInvoice(bot, update.Message, userStates)
+	}
+}
+
+func processCreateInvoice(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userStates map[int64]*UserState) {
+	// Verificar o texto da mensagem para determinar a ação a ser tomada
+	switch message.Text {
+	case "/oi":
+		sendStartMessage(bot, message.Chat.ID)
+	case "/cadastrar_fatura":
+		startInvoiceCreation(bot, message.Chat.ID, userStates)
+	default:
+		// Se o usuário estiver no meio do processo de cadastro de fatura, continuar o fluxo de conversa
+		if userState, ok := userStates[message.Chat.ID]; ok {
+			continueInvoiceCreation(bot, message, userState)
+		}
+	}
+}
+
+func sendStartMessage(bot *tgbotapi.BotAPI, chatID int64) {
+	msg := tgbotapi.NewMessage(chatID, "Bem-vindo ao Bot de Faturas!")
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+func startInvoiceCreation(bot *tgbotapi.BotAPI, chatID int64, userStates map[int64]*UserState) {
+	// Definir o estado da conversa do usuário como "cadastro_fatura"
+	userStates[chatID] = &UserState{
+		ChatID:      chatID,
+		CurrentStep: "cadastro_fatura",
+	}
+
+	msg := tgbotapi.NewMessage(chatID, "Por favor, insira o título da fatura:")
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+func continueInvoiceCreation(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userState *UserState) {
+	switch userState.CurrentStep {
+	case "cadastro_fatura":
+		// Armazenar o título da fatura
+		userState.NewInvoiceData.Title = message.Text
+		userState.CurrentStep = "cadastro_fatura_valor"
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Por favor, insira o valor da fatura:")
+		_, err := bot.Send(msg)
+		if err != nil {
+			log.Panic(err)
+		}
+	case "cadastro_fatura_valor":
+		// Armazenar o valor da fatura
+		// Aqui você deve fazer a validação do valor e convertê-lo para float, por exemplo
+		amountValue, erro := strconv.ParseFloat(message.Text, 64)
+		if erro != nil {
+			log.Panic(erro)
+		}
+		userState.NewInvoiceData.Amount = amountValue
+		userState.CurrentStep = "cadastro_fatura_data_vencimento"
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Por favor, insira a data de vencimento da fatura:")
+		_, err := bot.Send(msg)
+		if err != nil {
+			log.Panic(err)
+		}
+	case "cadastro_fatura_data_vencimento":
+		// Armazenar a data de vencimento da fatura
+		userState.NewInvoiceData.DueDate = message.Text
+		userState.CurrentStep = "" // Resetar o estado da conversa do usuário
+
+		// Aqui você pode processar os dados da nova fatura, por exemplo, salvar em um banco de dados
+		// e enviar uma mensagem de confirmação ao usuário
+		sendInvoiceConfirmationMessage(bot, message.Chat.ID, userState.NewInvoiceData)
+	default:
+		// Se o estado da conversa do usuário não for reconhecido, enviar uma mensagem informando o erro
+		sendUnknownStateMessage(bot, message.Chat.ID)
+	}
+}
+
+// Função para enviar uma mensagem de confirmação com os detalhes da fatura cadastrada
+func sendInvoiceConfirmationMessage(bot *tgbotapi.BotAPI, chatID int64, newInvoice NewInvoice) {
+	msgText := "Nova fatura cadastrada com sucesso!\n\n" +
+		"Título: " + newInvoice.Title + "\n" +
+		"Valor: " + "R$ " + formatAmount(newInvoice.Amount) + "\n" +
+		"Data de Vencimento: " + newInvoice.DueDate
+
+	msg := tgbotapi.NewMessage(chatID, msgText)
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+// Função para formatar o valor da fatura
+func formatAmount(amount float64) string {
+	return strconv.FormatFloat(amount, 'f', -1, 64)
+}
+
+// Função para enviar uma mensagem informando que o comando não foi reconhecido
+func sendUnknownCommandMessage(bot *tgbotapi.BotAPI, chatID int64) {
+	msg := tgbotapi.NewMessage(chatID, "Comando não reconhecido.")
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Panic(err)
+	}
+}
+
+// Função para enviar uma mensagem informando um erro de estado desconhecido
+func sendUnknownStateMessage(bot *tgbotapi.BotAPI, chatID int64) {
+	msg := tgbotapi.NewMessage(chatID, "Erro: Estado desconhecido.")
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Panic(err)
 	}
 }
