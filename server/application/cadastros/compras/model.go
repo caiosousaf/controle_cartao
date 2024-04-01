@@ -22,7 +22,7 @@ var (
 	// colunasFaturasPdf é a variavel que define as colunas que serão usadas no retorno do pdf da tabela de faturas
 	colunasFaturasPdf = []string{"Nome", "Local Compra", "Categoria", "Valor Parcela", "Parcela Atual", "Quantidade Parcelas", "Data Compra"}
 	// colunasMesesFaturasCartao é a variavel que define as colunas que serão usadas no retorno do pdf para a tabela com os meses das faturas de um cartão
-	colunasMesesFaturasCartao = []string{"Nome", "Valor", "Status"}
+	colunasMesesFaturasCartao = []string{"Nome", "Status", "Total"}
 )
 
 // ResCompras modela uma resposta para listagem e busca de compras

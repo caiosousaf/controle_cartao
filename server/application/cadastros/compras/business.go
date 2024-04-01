@@ -206,7 +206,8 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 			return pdf, utils.Wrap(erro, msgErrPadrao)
 		}
 
-		total := make([]string, len(listaFaturas.Dados))
+		totalFatura := make([]string, len(listaFaturas.Dados))
+		var total float64
 
 		pdf, erro = gerarPdf()
 		if erro != nil {
@@ -220,12 +221,18 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 				return pdf, utils.Wrap(err, msgErrPadrao)
 			}
 
-			total[j] = *valor.Total
+			totalFatura[j] = *valor.Total
+			totalFloat, err := strconv.ParseFloat(*valor.Total, 64)
+			if err != nil {
+				return pdf, utils.Wrap(err, "Não foi possível converter valor")
+			}
+
+			total += totalFloat
 
 			params.RemoverFiltros("fatura_id")
 		}
 
-		tabelaMesesFaturasCartao(pdf, listaFaturas, tamanhoCel, alturaCel, total)
+		tabelaMesesFaturasCartao(pdf, listaFaturas, tamanhoCel, alturaCel, totalFatura, total)
 
 		for i := range listaFaturas.Dados {
 			params.AdicionarFiltro("fatura_id", listaFaturas.Dados[i].ID.String())
@@ -270,6 +277,7 @@ func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 	return
 }
 
+// tabelaFaturasPdf
 func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, tamanho, altura float64) {
 	left := float64(40)
 
@@ -325,7 +333,8 @@ func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, tamanho,
 	return
 }
 
-func tabelaMesesFaturasCartao(pdf *gofpdf.Fpdf, listaFaturas *infraFaturas.FaturaPag, tamanho, altura float64, total []string) {
+// tabelaMesesFaturasCartao
+func tabelaMesesFaturasCartao(pdf *gofpdf.Fpdf, listaFaturas *infraFaturas.FaturaPag, tamanho, altura float64, totalFatura []string, total float64) {
 	var (
 		leftMeses = float64(71)
 		left      = float64(83)
@@ -348,19 +357,24 @@ func tabelaMesesFaturasCartao(pdf *gofpdf.Fpdf, listaFaturas *infraFaturas.Fatur
 		pdf.CellFormat(tamanho, altura, colunas, "1", 0, "C", true, 0, "")
 	}
 	pdf.Ln(-1)
-	pdf.SetFillColor(224, 235, 255)
-	pdf.SetTextColor(0, 0, 0)
 
 	for i, fatura := range listaFaturas.Dados {
+		pdf.SetFillColor(224, 235, 255)
+		pdf.SetTextColor(0, 0, 0)
 		pdf.SetX(leftMeses)
 
 		pdf.SetFont("Caviar", "", 5)
 
 		pdf.CellFormat(tamanho, altura, *fatura.Nome, "1", 0, "C", false, 0, "")
-		pdf.CellFormat(tamanho, altura, total[i], "1", 0, "C", false, 0, "")
 		pdf.CellFormat(tamanho, altura, *fatura.Status, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(tamanho, altura, totalFatura[i], "1", 0, "C", false, 0, "")
 		pdf.Ln(-1)
 	}
 
+	pdf.SetX(leftMeses)
+	pdf.CellFormat(tamanho*2, altura, "Valor total", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(tamanho, altura, strconv.FormatFloat(total, 'f', -1, 64), "1", 0, "C", true, 0, "")
+
+	pdf.Ln(-1)
 	pdf.Ln(-1)
 }
