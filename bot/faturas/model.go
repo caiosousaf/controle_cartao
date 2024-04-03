@@ -26,6 +26,13 @@ type UserStepComprasFatura struct {
 	Opcao         *string
 }
 
+type Fatura struct {
+	Position *int
+	ID       *uuid.UUID
+	Nome     *string
+	CartaoID *uuid.UUID
+}
+
 var (
 	AcaoAnterior string
 )
@@ -33,6 +40,7 @@ var (
 const (
 	BaseURLCartoes = "http://localhost:8080/cadastros/cartoes"
 	BaseURLFaturas = "http://localhost:8080/cadastros/cartao/"
+	BaseURLFatura  = "http://localhost:8080/cadastros/fatura/"
 )
 
 // Res modela uma resposta para listagem e busca de faturas de um cartão

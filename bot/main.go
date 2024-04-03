@@ -83,53 +83,62 @@ func main() {
 
 	// Loop pelas atualizações recebidas do bot
 	for update := range updates {
-		if update.Message == nil { // Ignora atualizações sem mensagem
-			continue
-		}
+		if update.CallbackQuery != nil {
+			log.Printf("[%s] %s", update.CallbackQuery.From.UserName, update.CallbackQuery.Message.Text)
 
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+			switch *userCompraFaturas.Opcao {
+			case "fatura_selecionada":
+				faturasCartao := faturas.ListarFaturas(fmt.Sprintf(faturas.BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
 
-		// Se a mensagem do usuário for "/start", envie uma mensagem de boas-vindas
-		if update.Message.Text == "/start" {
-			// Criando um teclado de resposta
-			buttonOpcao1 := tgbotapi.NewKeyboardButton("cartoes")
-			buttonOpcao2 := tgbotapi.NewKeyboardButton("faturas")
-			buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
-			buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
-
-			keyboard := tgbotapi.NewReplyKeyboard(
-				[]tgbotapi.KeyboardButton{buttonOpcao1, buttonOpcao2},
-				[]tgbotapi.KeyboardButton{buttonOpcao3, buttonOpcao4},
-			)
-
-			// Configurando a mensagem de boas-vindas com o teclado de resposta
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Selecione uma opção:")
-			msg.ReplyMarkup = keyboard
-
-			// Enviando a mensagem
-			_, err := bot.Send(msg)
-			if err != nil {
-				log.Panic(err)
+				faturas.EnviarOpcoesFaturas(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompraFaturas, update.CallbackQuery)
+			case "cartao_fatura_selecionado":
+				faturas.ProcessCallbackQuery(bot, update.CallbackQuery)
 			}
-			faturas.AcaoAnterior = "start"
-		}
+		} else if update.Message != nil {
+			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-		if update.Message.Text == "/cartoes" || update.Message.Text == "cartoes" {
-			msgGet := realizarGetString(faturas.BaseURLCartoes)
+			// Se a mensagem do usuário for "/start", envie uma mensagem de boas-vindas
+			if update.Message.Text == "/start" {
+				// Criando um teclado de resposta
+				buttonOpcao1 := tgbotapi.NewKeyboardButton("cartoes")
+				buttonOpcao2 := tgbotapi.NewKeyboardButton("faturas")
+				buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
+				buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
 
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgGet)
-			msg.ParseMode = "HTML"
-			_, err := bot.Send(msg)
-			if err != nil {
-				log.Panic(err)
+				keyboard := tgbotapi.NewReplyKeyboard(
+					[]tgbotapi.KeyboardButton{buttonOpcao1, buttonOpcao2},
+					[]tgbotapi.KeyboardButton{buttonOpcao3, buttonOpcao4},
+				)
+
+				// Configurando a mensagem de boas-vindas com o teclado de resposta
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Selecione uma opção:")
+				msg.ReplyMarkup = keyboard
+
+				// Enviando a mensagem
+				_, err := bot.Send(msg)
+				if err != nil {
+					log.Panic(err)
+				}
+				faturas.AcaoAnterior = "start"
 			}
-			faturas.AcaoAnterior = "cartoes"
-		}
 
-		if update.Message.Text == "faturas" || update.Message.Text == "/faturas" || faturas.AcaoAnterior == "faturas" {
-			faturas.ProcessoAcoesFaturas(bot, update.Message, userStates, userCompraFaturas)
+			if update.Message.Text == "/cartoes" || update.Message.Text == "cartoes" {
+				msgGet := realizarGetString(faturas.BaseURLCartoes)
 
-			faturas.AcaoAnterior = "faturas"
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgGet)
+				msg.ParseMode = "HTML"
+				_, err := bot.Send(msg)
+				if err != nil {
+					log.Panic(err)
+				}
+				faturas.AcaoAnterior = "cartoes"
+			}
+
+			if update.Message.Text == "faturas" || update.Message.Text == "/faturas" || faturas.AcaoAnterior == "faturas" {
+				faturas.ProcessoAcoesFaturas(bot, update.Message, userStates, userCompraFaturas)
+
+				faturas.AcaoAnterior = "faturas"
+			}
 		}
 	}
 }

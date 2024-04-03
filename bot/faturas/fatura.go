@@ -24,28 +24,13 @@ func ProcessoAcoesFaturas(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userS
 	switch message.Text {
 	case "faturas":
 		gerarOpcoesFatura(bot, message)
-	case "/compras":
-		inicioComprasFatura(message.Chat.ID, userStates)
-		userCompraFatura.ComprasFatura = true
-	case "/cadastrar_fatura":
+	case "compras":
+		cartoes := cartao.ListarCartoes(BaseURLCartoes)
+
+		EnviarOpcoesCartoes(bot, message.Chat.ID, &cartoes, userCompraFatura)
+	case "cadastrar_fatura":
 		inicioCriacaoFatura(bot, message.Chat.ID, userStates)
 		userStates[message.Chat.ID].CurrentStepBool = true
-	}
-
-	if userCompraFatura.ComprasFatura {
-		if userState, ok := userStates[message.Chat.ID]; ok {
-			continuaComprasFatura(bot, message, userState, userCompraFatura)
-		}
-	}
-
-}
-
-// inicioComprasFatura é responsável por iniciar o processo de obter as compras de uma fatura
-func inicioComprasFatura(chatID int64, userStates map[int64]*UserState) {
-	// Definir o estado da conversa do usuário como "cadastro_fatura"
-	userStates[chatID] = &UserState{
-		ChatID:      chatID,
-		CurrentStep: "start_compras_fatura",
 	}
 }
 
@@ -70,16 +55,6 @@ func inicioCriacaoFatura(bot *tgbotapi.BotAPI, chatID int64, userStates map[int6
 	_, err := bot.Send(msg)
 	if err != nil {
 		log.Panic(err)
-	}
-}
-
-// continuaComprasFatura é responsável por continuar o processo de solicitação das compras de uma fatura
-func continuaComprasFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userState *UserState, userCompraFatura *UserStepComprasFatura) {
-	switch userState.CurrentStep {
-	case "start_compras_fatura":
-		obterCartoesFatura(bot, message, userState, userCompraFatura)
-	case "compras_fatura":
-		obterCartaoSelecionado(bot, message, userState, userCompraFatura)
 	}
 }
 
@@ -159,8 +134,8 @@ func enviaErroMensagemInformadaEstadoDesconhecido(bot *tgbotapi.BotAPI, chatID i
 
 func gerarOpcoesFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	// Criando um teclado de resposta
-	buttonOpcao1 := tgbotapi.NewKeyboardButton("/compras")
-	buttonOpcao2 := tgbotapi.NewKeyboardButton("/cadastrar_fatura")
+	buttonOpcao1 := tgbotapi.NewKeyboardButton("compras")
+	buttonOpcao2 := tgbotapi.NewKeyboardButton("cadastrar_fatura")
 	buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
 	buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
 
@@ -180,117 +155,169 @@ func gerarOpcoesFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	}
 }
 
-func obterCartoesFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userState *UserState, userCompraFatura *UserStepComprasFatura) {
-	cartoes := cartao.ListarCartoes(BaseURLCartoes)
+// EnviarOpcoesCartoes Função para enviar botões inline de seleção de cartões
+func EnviarOpcoesCartoes(bot *tgbotapi.BotAPI, chatID int64, cartao *cartao.ResPag, userStates *UserStepComprasFatura) {
+	// Criar slice para armazenar botões
+	var buttons []tgbotapi.InlineKeyboardButton
 
-	var (
-		options []string
-	)
-	for _, cartaoValue := range cartoes.Dados {
-		options = append(options, *cartaoValue.Nome)
-	}
+	for _, card := range cartao.Dados {
+		button := tgbotapi.NewInlineKeyboardButtonData(*card.Nome, card.ID.String())
 
-	userCompraFatura.Cartoes = options
-
-	var buttons []tgbotapi.KeyboardButton
-
-	for i := range options {
-		button := tgbotapi.NewKeyboardButton(options[i])
 		buttons = append(buttons, button)
 	}
 
-	lenOptions := (len(buttons) + 1) / 2
+	lenOptions1, lenOptions2 := len(buttons)/2, len(buttons)/2
+	if len(buttons)%2 != 0 {
+		lenOptions1++ // Adiciona 1 à primeira parte se o número de botões for ímpar
+	}
 
-	buttonsOne := make([]tgbotapi.KeyboardButton, lenOptions)
-	buttonsTwo := make([]tgbotapi.KeyboardButton, lenOptions)
+	buttonsOne := make([]tgbotapi.InlineKeyboardButton, lenOptions1)
+	buttonsTwo := make([]tgbotapi.InlineKeyboardButton, lenOptions2)
 
-	copy(buttonsOne, buttons[:lenOptions])
-	copy(buttonsTwo, buttons[lenOptions:])
+	copy(buttonsOne, buttons[:lenOptions1])
+	copy(buttonsTwo, buttons[lenOptions2:])
 
-	keyboard := tgbotapi.NewReplyKeyboard(
+	// Criar teclado inline com os botões
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		buttonsOne,
 		buttonsTwo,
 	)
 
-	// Configurando a mensagem de boas-vindas com o teclado de resposta
-	msg := tgbotapi.NewMessage(message.Chat.ID, "Selecione o cartão:")
+	// Configurar a mensagem com o teclado
+	msg := tgbotapi.NewMessage(chatID, "Selecione um cartão: ")
 	msg.ReplyMarkup = keyboard
 
-	// Enviando a mensagem
+	// Enviar a mensagem
 	_, err := bot.Send(msg)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	userState.CurrentStep = "compras_fatura"
+	step := "fatura_selecionada"
 
-	return
+	userStates.Opcao = &step
 }
 
-func obterCartaoSelecionado(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userState *UserState, userCompraFatura *UserStepComprasFatura) {
-	if len(userCompraFatura.Cartoes) != 0 {
+// EnviarOpcoesFaturas Função para enviar botões inline de seleção de faturas
+func EnviarOpcoesFaturas(bot *tgbotapi.BotAPI, chatID int64, faturas *ResPagFaturas, userStates *UserStepComprasFatura, callbackQuery *tgbotapi.CallbackQuery) {
+	edit := tgbotapi.NewEditMessageText(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, fmt.Sprintf("Cartão Selecionado: %s", callbackQuery.Data))
+	edit.ReplyMarkup = nil
 
-		for _, option := range userCompraFatura.Cartoes {
-			if message.Text == option {
-				userCompraFatura.Opcao = &option
-				break
-			}
-		}
+	_, err := bot.Send(edit)
+	if err != nil {
+		log.Panic(err)
 	}
 
-	obterMesesFatura(bot, message, userCompraFatura)
+	// Criar slice para armazenar botões
+	var buttons []tgbotapi.InlineKeyboardButton
 
-	return
+	for _, invoice := range faturas.Dados {
+		button := tgbotapi.NewInlineKeyboardButtonData(*invoice.Nome, invoice.ID.String())
+
+		buttons = append(buttons, button)
+	}
+
+	lenOptions1, lenOptions2 := len(buttons)/2, len(buttons)/2
+	if len(buttons)%2 != 0 {
+		lenOptions1++
+		lenOptions2++
+	}
+
+	buttonsOne := make([]tgbotapi.InlineKeyboardButton, lenOptions1)
+	buttonsTwo := make([]tgbotapi.InlineKeyboardButton, lenOptions2-1)
+
+	copy(buttonsOne, buttons[:lenOptions1])
+	copy(buttonsTwo, buttons[lenOptions2:])
+
+	// Criar teclado inline com os botões
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(
+		buttonsOne,
+		buttonsTwo,
+	)
+
+	// Configurar a mensagem com o teclado
+	msg := tgbotapi.NewMessage(chatID, "Selecione uma fatura:")
+	msg.ReplyMarkup = keyboard
+
+	// Enviar a mensagem
+	_, err = bot.Send(msg)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	step := "cartao_fatura_selecionado"
+
+	userStates.Opcao = &step
 }
 
-func obterMesesFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCompraFatura *UserStepComprasFatura) {
-	var options []string
+// ProcessCallbackQuery Função para processar a escolha do usuário
+func ProcessCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.CallbackQuery) {
+	// Obter o ID da fatura a partir do CallbackData
 
-	if userCompraFatura.Opcao != nil {
-		cartaoEspecifico := cartao.ListarCartoes(fmt.Sprintf(BaseURLCartoes+"?nome_exato=%v", *userCompraFatura.Opcao))
+	res := BuscarFatura(&callbackQuery.Data)
 
-		faturas := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%v/faturas", cartaoEspecifico.Dados[0].ID))
+	// Realizar ações com base no ID da fatura selecionada
+	log.Printf("Usuário selecionou a fatura com ID: %s", *res.Nome)
 
-		for _, fatura := range faturas.Dados {
-			options = append(options, *fatura.Nome)
-		}
-
-		var buttonsMesesFatura []tgbotapi.KeyboardButton
-
-		for i := range options {
-			button := tgbotapi.NewKeyboardButton(options[i])
-			buttonsMesesFatura = append(buttonsMesesFatura, button)
-		}
-
-		lenFaturas := (len(buttonsMesesFatura) + 1) / 2
-
-		buttonsOneFaturas := make([]tgbotapi.KeyboardButton, lenFaturas)
-		buttonsTwoFaturas := make([]tgbotapi.KeyboardButton, lenFaturas)
-
-		copy(buttonsOneFaturas, buttonsMesesFatura[:lenFaturas])
-		copy(buttonsTwoFaturas, buttonsMesesFatura[lenFaturas:])
-
-		keyboardFaturas := tgbotapi.NewReplyKeyboard(
-			buttonsOneFaturas,
-			buttonsTwoFaturas,
-		)
-
-		// Configurando a mensagem de boas-vindas com o teclado de resposta
-		msgFaturas := tgbotapi.NewMessage(message.Chat.ID, "Selecione a fatura:")
-		msgFaturas.ReplyMarkup = keyboardFaturas
-
-		// Enviando a mensagem
-		_, err := bot.Send(msgFaturas)
-		if err != nil {
-			log.Panic(err)
-		}
+	// Responder para indicar que a callback query foi processada
+	answer := tgbotapi.NewCallback(callbackQuery.ID, "")
+	_, err := bot.AnswerCallbackQuery(answer)
+	if err != nil {
+		log.Println("Erro ao responder à callback query:", err)
+		return
 	}
 
-	userCompraFatura.ComprasFatura = false
+	// Opcional: enviar uma mensagem para indicar que a fatura foi selecionada
+	//msg := tgbotapi.NewMessage(callbackQuery.Message.Chat.ID, "Você selecionou a fatura: "+*res.Nome)
+	//_, err = bot.Send(msg)
+	//if err != nil {
+	//	log.Panic(err)
+	//}
+
+	dataVencimentoFormat := *res.DataVencimento
+
+	// Opcional: editar a mensagem original para remover os botões
+	edit := tgbotapi.NewEditMessageText(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID,
+		fmt.Sprintf("Dados básicos da Fatura selecionada: \n\n"+
+			"Nome Cartão: %s \n"+
+			"Status Pagamento: %s \n"+
+			"Data Vencimento: %s \n", *res.NomeCartao, *res.Status, dataVencimentoFormat[:10]))
+	edit.ReplyMarkup = nil // Remove o teclado inline
+
+	_, err = bot.Send(edit)
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 func ListarFaturas(url string) (res ResPagFaturas) {
 	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Erro ao fazer a requisição:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Lê o corpo da resposta
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Erro ao ler a resposta:", err)
+		return
+	}
+
+	// Imprime a resposta da API
+	fmt.Println("Resposta da API:", string(body))
+
+	if err := json.Unmarshal(body, &res); err != nil {
+		fmt.Println("Erro ao decodificar a resposta JSON:", err)
+		return
+	}
+
+	return
+}
+
+func BuscarFatura(id *string) (res Res) {
+	resp, err := http.Get(BaseURLFatura + *id)
 	if err != nil {
 		fmt.Println("Erro ao fazer a requisição:", err)
 		return
