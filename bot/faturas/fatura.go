@@ -2,6 +2,8 @@ package faturas
 
 import (
 	"bot_controle_cartao/cartao"
+	"bot_controle_cartao/compras"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -9,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // ProcessoAcoesFaturas é responsável por ter todos os processos das faturas
@@ -34,8 +37,8 @@ func ProcessoAcoesFaturas(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userS
 	}
 }
 
-// enviaMensagemInicio é responsável por enviar uma mensagem de boas vindas
-func enviaMensagemInicio(bot *tgbotapi.BotAPI, chatID int64) {
+// EnviaMensagemBoasVindas é responsável por enviar uma mensagem de boas vindas
+func EnviaMensagemBoasVindas(bot *tgbotapi.BotAPI, chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, "Bem-vindo ao Bot de Faturas!")
 	_, err := bot.Send(msg)
 	if err != nil {
@@ -256,6 +259,14 @@ func ProcessCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.Callback
 
 	res := BuscarFatura(&callbackQuery.Data)
 
+	pdfContent := compras.ObterComprasPdf(res.ID, res.FaturaCartaoID)
+
+	msgPdfCompras := tgbotapi.NewDocumentUpload(callbackQuery.Message.Chat.ID, tgbotapi.FileReader{
+		Name:   "compras_" + strings.ToLower(*res.Nome) + "_" + strings.ToLower(*res.NomeCartao) + ".pdf",
+		Reader: bytes.NewBuffer(pdfContent),
+		Size:   int64(len(pdfContent)),
+	})
+
 	// Realizar ações com base no ID da fatura selecionada
 	log.Printf("Usuário selecionou a fatura com ID: %s", *res.Nome)
 
@@ -267,13 +278,6 @@ func ProcessCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.Callback
 		return
 	}
 
-	// Opcional: enviar uma mensagem para indicar que a fatura foi selecionada
-	//msg := tgbotapi.NewMessage(callbackQuery.Message.Chat.ID, "Você selecionou a fatura: "+*res.Nome)
-	//_, err = bot.Send(msg)
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-
 	dataVencimentoFormat := *res.DataVencimento
 
 	// Opcional: editar a mensagem original para remover os botões
@@ -284,10 +288,31 @@ func ProcessCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.Callback
 			"Data Vencimento: %s \n", *res.NomeCartao, *res.Status, dataVencimentoFormat[:10]))
 	edit.ReplyMarkup = nil // Remove o teclado inline
 
-	_, err = bot.Send(edit)
-	if err != nil {
-		log.Panic(err)
+	comprasFatura := compras.ListarComprasFatura(&callbackQuery.Data)
+
+	var (
+		msgRetornoCompras string
+		//nomeFatura        string
+	)
+
+	for _, compra := range comprasFatura.Dados {
+		dataCompraFormat := *compra.DataCompra
+		msgRetornoCompra := fmt.Sprintf("Local da Compra: %s \n"+
+			"Descrição: %s \n"+
+			"Categoria: %s \n"+
+			"Valor da Parcela: %.2f \n"+
+			"Parcela Atual: %d \n"+
+			"Quantidade de Parcelas: %d \n"+
+			"Data da Compra: %s \n\n", *compra.LocalCompra, *compra.Descricao, *compra.CategoriaNome, *compra.ValorParcela, *compra.ParcelaAtual, *compra.QuantidadeParcelas, dataCompraFormat[:10])
+
+		msgRetornoCompras += msgRetornoCompra
 	}
+
+	msg := tgbotapi.NewMessage(callbackQuery.Message.Chat.ID, msgRetornoCompras)
+
+	EnviaMensagem(bot, msg)
+	EnviaMensagem(bot, edit)
+	EnviaMensagem(bot, msgPdfCompras)
 }
 
 func ListarFaturas(url string) (res ResPagFaturas) {
@@ -340,4 +365,12 @@ func BuscarFatura(id *string) (res Res) {
 	}
 
 	return
+}
+
+// EnviaMensagem é responsável por encapsular a função Send da libi
+func EnviaMensagem(bot *tgbotapi.BotAPI, c tgbotapi.Chattable) {
+	_, err := bot.Send(c)
+	if err != nil {
+		log.Panic(err)
+	}
 }

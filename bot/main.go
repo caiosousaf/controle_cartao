@@ -105,8 +105,9 @@ func main() {
 		} else if update.Message != nil {
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-			// Se a mensagem do usuário for "/start", envie uma mensagem de boas-vindas
 			if update.Message.Text == "/start" {
+				faturas.EnviaMensagemBoasVindas(bot, update.Message.Chat.ID)
+
 				// Criando um teclado de resposta
 				buttonOpcao1 := tgbotapi.NewKeyboardButton("cartoes")
 				buttonOpcao2 := tgbotapi.NewKeyboardButton("faturas")
