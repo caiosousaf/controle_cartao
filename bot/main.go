@@ -5,10 +5,12 @@ import (
 	"bot_controle_cartao/faturas"
 	"encoding/json"
 	"fmt"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/joho/godotenv"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 func realizarGetString(url string) (msgGet string) {
@@ -49,10 +51,16 @@ func realizarGetString(url string) (msgGet string) {
 	return
 }
 
+func init() {
+	if err := godotenv.Load("server/.env"); err != nil {
+		log.Fatalf("Erro ao carregar arquivo .env: %v", err)
+	}
+}
+
 func main() {
 
 	// Inicialize o token do seu bot aqui
-	token := "6821239738:AAGyxhdn27UYG7TSm31DpS_cKo0ezbzoySA"
+	token := os.Getenv("TOKEN")
 
 	// Cria um novo bot com o token fornecido
 	bot, err := tgbotapi.NewBotAPI(token)
