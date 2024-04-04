@@ -36,13 +36,27 @@ func ListarComprasFatura(idFatura *string) (res ResComprasPag) {
 }
 
 // ObterComprasPdf é responsável por realizar a requisição que obtém o pdf com as compras
-func ObterComprasPdf(idFatura, idCartao *uuid.UUID) []byte {
-	resp, err := http.Get(BaseURLComprasPdf + "?fatura_id=" + idFatura.String() + "&cartao_id=" + idCartao.String())
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return nil
+func ObterComprasPdf(idFatura *uuid.UUID, idCartao *uuid.UUID) []byte {
+	var (
+		resp *http.Response
+		err  error
+	)
+
+	if idFatura != nil && idCartao != nil {
+		resp, err = http.Get(BaseURLComprasPdf + "?fatura_id=" + idFatura.String() + "&cartao_id=" + idCartao.String())
+		if err != nil {
+			fmt.Println("Erro ao fazer a requisição:", err)
+			return nil
+		}
+		defer resp.Body.Close()
+	} else {
+		resp, err = http.Get(BaseURLComprasPdf + "?cartao_id=" + idCartao.String())
+		if err != nil {
+			fmt.Println("Erro ao fazer a requisição:", err)
+			return nil
+		}
+		defer resp.Body.Close()
 	}
-	defer resp.Body.Close()
 
 	// Lê o corpo da resposta
 	body, err := ioutil.ReadAll(resp.Body)

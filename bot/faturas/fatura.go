@@ -28,9 +28,9 @@ func ProcessoAcoesFaturas(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userS
 	case "faturas":
 		gerarOpcoesFatura(bot, message)
 	case "compras":
-		cartoes := cartao.ListarCartoes(BaseURLCartoes)
+		cartoes := cartao.ListarCartoes(cartao.BaseURLCartoes)
 
-		EnviarOpcoesCartoes(bot, message.Chat.ID, &cartoes, userCompraFatura)
+		EnviarOpcoesCartoesFatura(bot, message.Chat.ID, &cartoes, userCompraFatura)
 	case "cadastrar_fatura":
 		inicioCriacaoFatura(bot, message.Chat.ID, userStates)
 		userStates[message.Chat.ID].CurrentStepBool = true
@@ -158,8 +158,8 @@ func gerarOpcoesFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	}
 }
 
-// EnviarOpcoesCartoes Função para enviar botões inline de seleção de cartões
-func EnviarOpcoesCartoes(bot *tgbotapi.BotAPI, chatID int64, cartao *cartao.ResPag, userStates *UserStepComprasFatura) {
+// EnviarOpcoesCartoesFatura Função para enviar botões inline de seleção de cartões
+func EnviarOpcoesCartoesFatura(bot *tgbotapi.BotAPI, chatID int64, cartao *cartao.ResPag, userStates *UserStepComprasFatura) {
 	// Criar slice para armazenar botões
 	var buttons []tgbotapi.InlineKeyboardButton
 

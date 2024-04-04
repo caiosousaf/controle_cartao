@@ -2,10 +2,13 @@ package main
 
 import (
 	"bot_controle_cartao/cartao"
+	"bot_controle_cartao/compras"
 	"bot_controle_cartao/faturas"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"log"
@@ -74,10 +77,19 @@ func main() {
 	log.Printf("Autorizado como %s", bot.Self.UserName)
 
 	userStates := make(map[int64]*faturas.UserState)
-	userCompraFaturas := &faturas.UserStepComprasFatura{
-		Cartoes: []string{}, // Preencha a fatia de cartões conforme necessário
-		Opcao:   nil,        // Ou atribua um valor ao ponteiro de opção, se necessário
+	userStatesCartao := &cartao.UserStateCartao{
+		CurrentStep:     "",
+		CurrentStepBool: false,
+		NovoCartaoData:  cartao.NovoCartao{},
 	}
+	userCompraFaturas := &faturas.UserStepComprasFatura{
+		Cartoes: []string{},
+		Opcao:   nil,
+	}
+
+	var (
+		AcaoAnterior string
+	)
 
 	// Configuração de atualização com o webhook ou polling
 	// Aqui, estamos usando a opção de polling para obter atualizações
@@ -94,13 +106,50 @@ func main() {
 		if update.CallbackQuery != nil {
 			log.Printf("[%s] %s", update.CallbackQuery.From.UserName, update.CallbackQuery.Message.Text)
 
-			switch *userCompraFaturas.Opcao {
-			case "fatura_selecionada":
-				faturasCartao := faturas.ListarFaturas(fmt.Sprintf(faturas.BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
+			if AcaoAnterior == "cartoes" {
+				switch userStatesCartao.CurrentStep {
+				case "selecionar_ano":
+					userStatesCartao.NovoCartaoData.ID = update.CallbackQuery.Data
 
-				faturas.EnviarOpcoesFaturas(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompraFaturas, update.CallbackQuery)
-			case "cartao_fatura_selecionado":
-				faturas.ProcessCallbackQuery(bot, update.CallbackQuery)
+					cartao.EnviarOpcoesAno(bot, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery, userStatesCartao)
+				case "ano_selecionado":
+					idCartaoUUID, err := uuid.Parse(userStatesCartao.NovoCartaoData.ID)
+					if err != nil {
+						log.Panic(err)
+					}
+
+					edit := tgbotapi.NewEditMessageText(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, fmt.Sprintf("Cartão Selecionado: %s", update.CallbackQuery.Data))
+					edit.ReplyMarkup = nil
+
+					_, err = bot.Send(edit)
+					if err != nil {
+						log.Panic(err)
+					}
+
+					pdfContent := compras.ObterComprasPdf(nil, &idCartaoUUID)
+
+					msgPdfCompras := tgbotapi.NewDocumentUpload(update.CallbackQuery.Message.Chat.ID, tgbotapi.FileReader{
+						Name:   "compras_" + update.CallbackQuery.Data + ".pdf",
+						Reader: bytes.NewBuffer(pdfContent),
+						Size:   int64(len(pdfContent)),
+					})
+
+					_, err = bot.Send(msgPdfCompras)
+					if err != nil {
+						log.Panic(err)
+					}
+				}
+			}
+
+			if AcaoAnterior == "faturas" {
+				switch *userCompraFaturas.Opcao {
+				case "fatura_selecionada":
+					faturasCartao := faturas.ListarFaturas(fmt.Sprintf(faturas.BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
+
+					faturas.EnviarOpcoesFaturas(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompraFaturas, update.CallbackQuery)
+				case "cartao_fatura_selecionado":
+					faturas.ProcessCallbackQuery(bot, update.CallbackQuery)
+				}
 			}
 		} else if update.Message != nil {
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
@@ -128,25 +177,19 @@ func main() {
 				if err != nil {
 					log.Panic(err)
 				}
-				faturas.AcaoAnterior = "start"
+				AcaoAnterior = "start"
 			}
 
-			if update.Message.Text == "/cartoes" || update.Message.Text == "cartoes" {
-				msgGet := realizarGetString(faturas.BaseURLCartoes)
+			if update.Message.Text == "/cartoes" || update.Message.Text == "cartoes" || AcaoAnterior == "cartoes" {
+				cartao.ProcessoAcoesCartoes(bot, update.Message, userStatesCartao)
 
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgGet)
-				msg.ParseMode = "HTML"
-				_, err := bot.Send(msg)
-				if err != nil {
-					log.Panic(err)
-				}
-				faturas.AcaoAnterior = "cartoes"
+				AcaoAnterior = "cartoes"
 			}
 
-			if update.Message.Text == "faturas" || update.Message.Text == "/faturas" || faturas.AcaoAnterior == "faturas" {
+			if update.Message.Text == "faturas" || update.Message.Text == "/faturas" || AcaoAnterior == "faturas" {
 				faturas.ProcessoAcoesFaturas(bot, update.Message, userStates, userCompraFaturas)
 
-				faturas.AcaoAnterior = "faturas"
+				AcaoAnterior = "faturas"
 			}
 		}
 	}

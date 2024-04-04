@@ -5,6 +5,21 @@ import (
 	"time"
 )
 
+// UserStateCartao Struct para armazenar o estado da conversa do usuário para ações de cartões
+type UserStateCartao struct {
+	CurrentStep     string
+	CurrentStepBool bool
+	NovoCartaoData  NovoCartao
+}
+
+// NovoCartao Struct para armazenar os dados de um novo cartão
+type NovoCartao struct {
+	ID   string
+	Nome string
+}
+
+const BaseURLCartoes = "http://localhost:8080/cadastros/cartoes"
+
 // Res modela uma resposta para listagem e busca de cartões
 type Res struct {
 	ID              *uuid.UUID `json:"id" apelido:"id"`

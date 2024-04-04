@@ -33,12 +33,7 @@ type Fatura struct {
 	CartaoID *uuid.UUID
 }
 
-var (
-	AcaoAnterior string
-)
-
 const (
-	BaseURLCartoes = "http://localhost:8080/cadastros/cartoes"
 	BaseURLFaturas = "http://localhost:8080/cadastros/cartao/"
 	BaseURLFatura  = "http://localhost:8080/cadastros/fatura/"
 )
