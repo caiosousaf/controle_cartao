@@ -16,10 +16,28 @@ func listarCategorias(c *gin.Context) {
 
 	res, err := categorias.ListarCategorias(&params)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		c.Abort()
 		return
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+// removerCategoria
+func removerCategoria(c *gin.Context) {
+	idCategoria, err := utils.GetUUIDFromParam(c, "categoria_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	if err := categorias.RemoverCategoria(idCategoria); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
 }

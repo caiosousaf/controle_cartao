@@ -5,6 +5,7 @@ import (
 	"controle_cartao/utils"
 	"database/sql"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 )
 
 // DBCategoria é uma estrutura para acesso aos métodos do banco postgres para manipulação das categorias
@@ -26,6 +27,10 @@ func (pg *DBCategoria) ListarCategorias(params *utils.Parametros) (res *model.Ca
 	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select(campos...).
 		From("public.t_categoria_compra TCC")
 
+	if !params.TemFiltro("ativo") {
+		consultaSql = consultaSql.Where(sq.Eq{"TCC.data_desativacao": nil})
+	}
+
 	consultaComFiltro := params.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"categoria_id": utils.CriarFiltros("TCC.id = ?::UUID", utils.FlagFiltroEq),
 		"nome_exato":   utils.CriarFiltros("TCC.nome = ?::VARCHAR", utils.FlagFiltroEq),
@@ -41,4 +46,27 @@ func (pg *DBCategoria) ListarCategorias(params *utils.Parametros) (res *model.Ca
 	res.Dados, res.Prox, res.Total = dados.([]model.Categorias), prox, total
 
 	return
+}
+
+// RemoverCategoria remove uma categoria
+func (pg *DBCategoria) RemoverCategoria(idCategoria *uuid.UUID) error {
+	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_categoria_compra").
+		Set("data_desativacao", "NOW()").
+		Where(sq.Eq{
+			"id": idCategoria,
+		}).PlaceholderFormat(sq.Dollar).Exec()
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Categoria não foi encontrada, já se encontra desativada ou não existe")
+	}
+
+	return err
 }

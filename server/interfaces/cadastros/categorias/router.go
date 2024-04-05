@@ -6,3 +6,8 @@ import "github.com/gin-gonic/gin"
 func Router(r *gin.RouterGroup) {
 	r.GET("", listarCategorias)
 }
+
+// RouterWithID é um router para as rotas de categorias que utilizam ID
+func RouterWithID(r *gin.RouterGroup) {
+	r.PUT("", removerCategoria)
+}
