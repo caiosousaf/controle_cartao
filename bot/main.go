@@ -160,7 +160,7 @@ func main() {
 				// Criando um teclado de resposta
 				buttonOpcao1 := tgbotapi.NewKeyboardButton("cartoes")
 				buttonOpcao2 := tgbotapi.NewKeyboardButton("faturas")
-				buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
+				buttonOpcao3 := tgbotapi.NewKeyboardButton("compras")
 				buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
 
 				keyboard := tgbotapi.NewReplyKeyboard(
