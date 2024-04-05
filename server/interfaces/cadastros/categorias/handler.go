@@ -11,19 +11,42 @@ import (
 func cadastrarCategoria(c *gin.Context) {
 	var req categorias.ReqCategoria
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
 
 	id, err := categorias.CadastrarCategoria(&req)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
 
 	c.JSON(http.StatusCreated, id)
+}
+
+// atualizarCategoria
+func atualizarCategoria(c *gin.Context) {
+	idCategoria, err := utils.GetUUIDFromParam(c, "categoria_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	var req categorias.ReqCategoria
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	if err = categorias.AtualizarCategoria(&req, idCategoria); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+
+	}
 }
 
 // listarCategorias

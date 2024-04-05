@@ -12,5 +12,6 @@ func Router(r *gin.RouterGroup) {
 func RouterWithID(r *gin.RouterGroup) {
 	r.DELETE("remover", removerCategoria)
 	r.PUT("reativar", reativarCategoria)
+	r.PUT("", atualizarCategoria)
 	r.GET("", buscarCategoria)
 }

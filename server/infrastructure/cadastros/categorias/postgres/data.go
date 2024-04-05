@@ -27,6 +27,30 @@ func (pg *DBCategoria) CadastrarCategoria(req *model.Categorias) (err error) {
 	return
 }
 
+// AtualizarCategoria atualiza uma categoria no banco de dados
+func (pg *DBCategoria) AtualizarCategoria(req *model.Categorias, idCategoria *uuid.UUID) (err error) {
+	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_categoria_compra").
+		Set("nome", req.Nome).
+		Where(sq.Eq{"id": idCategoria,
+			"data_desativacao": nil}).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Categoria não foi encontrada, ou não existe no banco de dados")
+	}
+
+	return err
+}
+
 // ListarCategorias lista as categorias cadastradas
 func (pg *DBCategoria) ListarCategorias(params *utils.Parametros) (res *model.CategoriasPag, err error) {
 	var t model.Categorias

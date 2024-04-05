@@ -23,6 +23,11 @@ func (r *repo) CadastrarCategoria(req *categorias.Categorias) error {
 	return r.Data.CadastrarCategoria(req)
 }
 
+// AtualizarCategoria é um gerenciador de fluxo de dados para atualizar uma categoria
+func (r *repo) AtualizarCategoria(req *categorias.Categorias, idCategoria *uuid.UUID) error {
+	return r.Data.AtualizarCategoria(req, idCategoria)
+}
+
 // ListarCategorias é um gerenciador de fluxo de dados para listar as categorias
 func (r *repo) ListarCategorias(params *utils.Parametros) (*categorias.CategoriasPag, error) {
 	return r.Data.ListarCategorias(params)

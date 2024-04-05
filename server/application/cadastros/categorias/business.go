@@ -58,6 +58,55 @@ func CadastrarCategoria(req *ReqCategoria) (id *uuid.UUID, err error) {
 	return
 }
 
+// AtualizarCategoria contém a regra de negócio para atualizar uma categoria
+func AtualizarCategoria(req *ReqCategoria, idCategoria *uuid.UUID) (err error) {
+	const (
+		msgErrPadrao         = "Erro ao atualizar categoria"
+		msgErrPadraoListagem = "Erro ao buscar categoria"
+	)
+	var (
+		p utils.Parametros
+	)
+
+	var reqInfra = new(infra.Categorias)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	repo := categorias.NovoRepo(db)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	p.Filtros = make(map[string][]string)
+	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Limite = 1
+	lista, err := repo.ListarCategorias(&p)
+	if err != nil {
+		return utils.Wrap(err, msgErrPadraoListagem)
+	}
+
+	if len(lista.Dados) > 0 {
+		if lista.Dados[0].DataDesativacao != nil {
+			return utils.NewErr("Categoria desativada!")
+		} else if *idCategoria == *lista.Dados[0].ID {
+			return
+		} else {
+			return utils.NewErr("Já existe um cartão ativo com esse nome!")
+		}
+	}
+
+	if err = repo.AtualizarCategoria(reqInfra, idCategoria); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}
+
 // ListarCategorias contém a regra de negócio para listar as categorias
 func ListarCategorias(params *utils.Parametros) (res *ResCategoriasPag, err error) {
 	const msgErrPadrao = "Erro ao listar categorias"
