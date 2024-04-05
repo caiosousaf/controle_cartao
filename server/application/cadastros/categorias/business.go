@@ -3,9 +3,60 @@ package categorias
 import (
 	"controle_cartao/config/database"
 	"controle_cartao/domain/cadastros/categorias"
+	infra "controle_cartao/infrastructure/cadastros/categorias"
 	"controle_cartao/utils"
 	"github.com/google/uuid"
 )
+
+// CadastrarCategoria contém a regra de negócio para cadastrar uma categoria
+func CadastrarCategoria(req *ReqCategoria) (id *uuid.UUID, err error) {
+	const (
+		msgErrPadrao         = "Erro ao cadastrar nova categoria"
+		msgErrPadraoListagem = "Erro ao listar categoria"
+	)
+	var (
+		p utils.Parametros
+	)
+
+	var reqInfra = new(infra.Categorias)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return id, utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	repo := categorias.NovoRepo(db)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return id, utils.Wrap(err, msgErrPadrao)
+	}
+
+	p.Filtros = make(map[string][]string)
+	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Limite = 1
+	lista, err := repo.ListarCategorias(&p)
+	if err != nil {
+		return id, utils.Wrap(err, msgErrPadraoListagem)
+	}
+
+	// Verifica se já existe algum cartão com esse nome
+	if len(lista.Dados) > 0 {
+		if lista.Dados[0].DataDesativacao != nil {
+
+		} else {
+			return id, utils.NewErr("Já existe uma categoria ativa com esse nome")
+		}
+	}
+
+	if err = repo.CadastrarCategoria(reqInfra); err != nil {
+		return id, utils.Wrap(err, msgErrPadrao)
+	}
+
+	id = reqInfra.ID
+
+	return
+}
 
 // ListarCategorias contém a regra de negócio para listar as categorias
 func ListarCategorias(params *utils.Parametros) (res *ResCategoriasPag, err error) {

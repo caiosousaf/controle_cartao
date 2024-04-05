@@ -18,6 +18,11 @@ func novoRepo(novoDB *sql.DB) *repo {
 	}
 }
 
+// CadastrarCategoria é um gerenciador de fluxo de dados para cadastrar uma nova categoria
+func (r *repo) CadastrarCategoria(req *categorias.Categorias) error {
+	return r.Data.CadastrarCategoria(req)
+}
+
 // ListarCategorias é um gerenciador de fluxo de dados para listar as categorias
 func (r *repo) ListarCategorias(params *utils.Parametros) (*categorias.CategoriasPag, error) {
 	return r.Data.ListarCategorias(params)

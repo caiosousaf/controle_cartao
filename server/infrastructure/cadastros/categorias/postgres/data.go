@@ -13,6 +13,20 @@ type DBCategoria struct {
 	DB *sql.DB
 }
 
+// CadastrarCategoria cadastra uma nova categoria no banco de dados
+func (pg *DBCategoria) CadastrarCategoria(req *model.Categorias) (err error) {
+	if err = sq.StatementBuilder.RunWith(pg.DB).Insert("public.t_categoria_compra").
+		Columns("nome").
+		Values(req.Nome).
+		Suffix(`RETURNING "id"`).
+		PlaceholderFormat(sq.Dollar).
+		Scan(&req.ID); err != nil {
+		return
+	}
+
+	return
+}
+
 // ListarCategorias lista as categorias cadastradas
 func (pg *DBCategoria) ListarCategorias(params *utils.Parametros) (res *model.CategoriasPag, err error) {
 	var t model.Categorias

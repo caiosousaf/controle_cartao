@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+// ReqCategoria modela uma estrutura para a criação de uma categoria
+type ReqCategoria struct {
+	Nome *string `json:"nome" apelido:"nome"`
+}
+
 // ResCategorias modela uma resposta para listagem e busca de categorias
 type ResCategorias struct {
 	ID              *uuid.UUID `json:"id" apelido:"id"`

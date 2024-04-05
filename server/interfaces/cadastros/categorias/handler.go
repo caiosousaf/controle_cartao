@@ -7,6 +7,25 @@ import (
 	"net/http"
 )
 
+// cadastrarCategoria
+func cadastrarCategoria(c *gin.Context) {
+	var req categorias.ReqCategoria
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	id, err := categorias.CadastrarCategoria(&req)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusCreated, id)
+}
+
 // listarCategorias
 func listarCategorias(c *gin.Context) {
 	params, err := utils.ParseParams(c)
