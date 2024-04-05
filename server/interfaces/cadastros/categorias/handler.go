@@ -59,3 +59,22 @@ func reativarCategoria(c *gin.Context) {
 
 	c.JSON(http.StatusOK, nil)
 }
+
+// buscarCategoria
+func buscarCategoria(c *gin.Context) {
+	idCategoria, err := utils.GetUUIDFromParam(c, "categoria_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	res, err := categorias.BuscarCategoria(idCategoria)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}

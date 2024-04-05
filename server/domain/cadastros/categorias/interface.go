@@ -11,4 +11,5 @@ type ICategoria interface {
 	ListarCategorias(params *utils.Parametros) (*categorias.CategoriasPag, error)
 	RemoverCategoria(idCategoria *uuid.UUID) error
 	ReativarCategoria(idCategoria *uuid.UUID) error
+	BuscarCategoria(idCategoria *uuid.UUID) (*categorias.Categorias, error)
 }

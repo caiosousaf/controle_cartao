@@ -76,3 +76,30 @@ func ReativarCategoria(idCategoria *uuid.UUID) error {
 
 	return err
 }
+
+// BuscarCategoria contém a regra de negócio para buscar uma categoria
+func BuscarCategoria(idCategoria *uuid.UUID) (res ResCategorias, err error) {
+	const msgErrPadrao = "Erro ao buscar categoria"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return res, err
+	}
+	defer db.Close()
+
+	repo := categorias.NovoRepo(db)
+
+	resCategoria, err := repo.BuscarCategoria(idCategoria)
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+
+	res = ResCategorias{
+		ID:              resCategoria.ID,
+		Nome:            resCategoria.Nome,
+		DataCriacao:     resCategoria.DataCriacao,
+		DataDesativacao: resCategoria.DataDesativacao,
+	}
+
+	return
+}

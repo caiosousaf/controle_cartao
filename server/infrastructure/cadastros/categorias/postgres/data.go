@@ -96,3 +96,20 @@ func (pg *DBCategoria) ReativarCategoria(idCategoria *uuid.UUID) error {
 
 	return err
 }
+
+// BuscarCategoria busca uma categoria de acordo com o id dela
+func (pg *DBCategoria) BuscarCategoria(idCategoria *uuid.UUID) (res *model.Categorias, err error) {
+	res = new(model.Categorias)
+
+	if err = sq.StatementBuilder.RunWith(pg.DB).Select(`TCC.id, TCC.nome, TCC.data_criacao, TCC.data_desativacao`).
+		From("public.t_categoria_compra TCC").
+		Where(sq.Eq{
+			"id":               idCategoria,
+			"data_desativacao": nil,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Scan(&res.ID, &res.Nome, &res.DataCriacao, &res.DataDesativacao); err != nil {
+		return res, err
+	}
+	return
+}
