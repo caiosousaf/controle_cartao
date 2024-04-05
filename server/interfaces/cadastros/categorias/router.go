@@ -9,5 +9,6 @@ func Router(r *gin.RouterGroup) {
 
 // RouterWithID é um router para as rotas de categorias que utilizam ID
 func RouterWithID(r *gin.RouterGroup) {
-	r.PUT("", removerCategoria)
+	r.DELETE("remover", removerCategoria)
+	r.PUT("reativar", reativarCategoria)
 }

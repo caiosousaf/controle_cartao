@@ -57,3 +57,22 @@ func RemoverCategoria(idCategoria *uuid.UUID) error {
 
 	return err
 }
+
+// ReativarCategoria contém a regra de negócio para reativar uma categoria
+func ReativarCategoria(idCategoria *uuid.UUID) error {
+	const msgErrPadrao = "Erro ao reativar categoria"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	repo := categorias.NovoRepo(db)
+
+	if err := repo.ReativarCategoria(idCategoria); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return err
+}

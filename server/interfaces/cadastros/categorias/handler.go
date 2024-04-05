@@ -41,3 +41,21 @@ func removerCategoria(c *gin.Context) {
 
 	c.JSON(http.StatusOK, nil)
 }
+
+// reativarCategoria
+func reativarCategoria(c *gin.Context) {
+	idCategoria, err := utils.GetUUIDFromParam(c, "categoria_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	if err := categorias.ReativarCategoria(idCategoria); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}

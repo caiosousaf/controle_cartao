@@ -70,3 +70,29 @@ func (pg *DBCategoria) RemoverCategoria(idCategoria *uuid.UUID) error {
 
 	return err
 }
+
+// ReativarCategoria reativa uma categoria
+func (pg *DBCategoria) ReativarCategoria(idCategoria *uuid.UUID) error {
+	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_categoria_compra").
+		Set("data_desativacao", nil).
+		Where(sq.Eq{
+			"id": idCategoria,
+		},
+			sq.NotEq{
+				"data_desativacao": nil,
+			}).PlaceholderFormat(sq.Dollar).Exec()
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Categoria não foi encontrada, já se encontra ativada ou não existe no banco de dados")
+	}
+
+	return err
+}
