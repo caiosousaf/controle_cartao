@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -162,30 +162,22 @@ func gerarOpcoesFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 // EnviarOpcoesCartoesFatura Função para enviar botões inline de seleção de cartões
 func EnviarOpcoesCartoesFatura(bot *tgbotapi.BotAPI, chatID int64, cartao *cartao.ResPag, userStates *UserStepComprasFatura) {
 	// Criar slice para armazenar botões
-	var buttons []tgbotapi.InlineKeyboardButton
+	var buttons [][]tgbotapi.InlineKeyboardButton
 
-	for _, card := range cartao.Dados {
+	for i, card := range cartao.Dados {
 		button := tgbotapi.NewInlineKeyboardButtonData(*card.Nome, card.ID.String())
 
-		buttons = append(buttons, button)
+		// Adicionar botão à linha atual
+		row := i / 3
+		if len(buttons) <= row {
+			// Adicionar uma nova linha se necessário
+			buttons = append(buttons, []tgbotapi.InlineKeyboardButton{})
+		}
+		buttons[row] = append(buttons[row], button)
 	}
-
-	lenOptions1, lenOptions2 := len(buttons)/2, len(buttons)/2
-	if len(buttons)%2 != 0 {
-		lenOptions1++ // Adiciona 1 à primeira parte se o número de botões for ímpar
-	}
-
-	buttonsOne := make([]tgbotapi.InlineKeyboardButton, lenOptions1)
-	buttonsTwo := make([]tgbotapi.InlineKeyboardButton, lenOptions2)
-
-	copy(buttonsOne, buttons[:lenOptions1])
-	copy(buttonsTwo, buttons[lenOptions2:])
 
 	// Criar teclado inline com os botões
-	keyboard := tgbotapi.NewInlineKeyboardMarkup(
-		buttonsOne,
-		buttonsTwo,
-	)
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons...)
 
 	// Configurar a mensagem com o teclado
 	msg := tgbotapi.NewMessage(chatID, "Selecione um cartão: ")
@@ -334,7 +326,7 @@ func ListarFaturas(url string) (res ResPagFaturas) {
 	defer resp.Body.Close()
 
 	// Lê o corpo da resposta
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return
@@ -361,7 +353,7 @@ func BuscarFatura(id *string) (res Res) {
 	defer resp.Body.Close()
 
 	// Lê o corpo da resposta
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return

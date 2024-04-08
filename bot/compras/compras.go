@@ -9,7 +9,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/google/uuid"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -131,30 +131,22 @@ func gerarOpcoesAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 // EnviarOpcoesCartoesFatura é responsável por enviar as opções de cartões disponíveis
 func EnviarOpcoesCartoesFatura(bot *tgbotapi.BotAPI, chatID int64, cartao *cartao.ResPag, userStatesCompras *UserStateCompras) {
 	// Criar slice para armazenar botões
-	var buttons []tgbotapi.InlineKeyboardButton
+	var buttons [][]tgbotapi.InlineKeyboardButton
 
-	for _, card := range cartao.Dados {
+	for i, card := range cartao.Dados {
 		button := tgbotapi.NewInlineKeyboardButtonData(*card.Nome, card.ID.String())
 
-		buttons = append(buttons, button)
+		// Adicionar botão à linha atual
+		row := i / 3
+		if len(buttons) <= row {
+			// Adicionar uma nova linha se necessário
+			buttons = append(buttons, []tgbotapi.InlineKeyboardButton{})
+		}
+		buttons[row] = append(buttons[row], button)
 	}
-
-	lenOptions1, lenOptions2 := len(buttons)/2, len(buttons)/2
-	if len(buttons)%2 != 0 {
-		lenOptions1++ // Adiciona 1 à primeira parte se o número de botões for ímpar
-	}
-
-	buttonsOne := make([]tgbotapi.InlineKeyboardButton, lenOptions1)
-	buttonsTwo := make([]tgbotapi.InlineKeyboardButton, lenOptions2)
-
-	copy(buttonsOne, buttons[:lenOptions1])
-	copy(buttonsTwo, buttons[lenOptions2:])
 
 	// Criar teclado inline com os botões
-	keyboard := tgbotapi.NewInlineKeyboardMarkup(
-		buttonsOne,
-		buttonsTwo,
-	)
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons...)
 
 	// Configurar a mensagem com o teclado
 	msg := tgbotapi.NewMessage(chatID, "Selecione um cartão: ")
@@ -183,30 +175,22 @@ func EnviarOpcoesCategoriasCompras(bot *tgbotapi.BotAPI, chatID int64, categoria
 
 	userStatesCompras.FaturaID = &callbackQuery.Data
 	// Criar slice para armazenar botões
-	var buttons []tgbotapi.InlineKeyboardButton
+	var buttons [][]tgbotapi.InlineKeyboardButton
 
-	for _, categoria := range categorias.Dados {
+	for i, categoria := range categorias.Dados {
 		button := tgbotapi.NewInlineKeyboardButtonData(*categoria.Nome, categoria.ID.String())
 
-		buttons = append(buttons, button)
+		// Adicionar botão à linha atual
+		row := i / 3
+		if len(buttons) <= row {
+			// Adicionar uma nova linha se necessário
+			buttons = append(buttons, []tgbotapi.InlineKeyboardButton{})
+		}
+		buttons[row] = append(buttons[row], button)
 	}
-
-	lenOptions1, lenOptions2 := len(buttons)/2, len(buttons)/2
-	if len(buttons)%2 != 0 {
-		lenOptions1++ // Adiciona 1 à primeira parte se o número de botões for ímpar
-	}
-
-	buttonsOne := make([]tgbotapi.InlineKeyboardButton, lenOptions1)
-	buttonsTwo := make([]tgbotapi.InlineKeyboardButton, lenOptions2)
-
-	copy(buttonsOne, buttons[:lenOptions1])
-	copy(buttonsTwo, buttons[lenOptions2:])
 
 	// Criar teclado inline com os botões
-	keyboard := tgbotapi.NewInlineKeyboardMarkup(
-		buttonsOne,
-		buttonsTwo,
-	)
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons...)
 
 	// Configurar a mensagem com o teclado
 	msg := tgbotapi.NewMessage(chatID, "Selecione uma categoria: ")
@@ -264,7 +248,7 @@ func ListarComprasFatura(idFatura *string) (res ResComprasPag) {
 	defer resp.Body.Close()
 
 	// Lê o corpo da resposta
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return
@@ -312,7 +296,7 @@ func CadastrarCompra(compras *UserStateCompras) (res ResComprasPag) {
 	defer resp.Body.Close()
 
 	// Lê o corpo da resposta
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return
@@ -353,7 +337,7 @@ func ObterComprasPdf(idFatura *uuid.UUID, idCartao *uuid.UUID) []byte {
 	}
 
 	// Lê o corpo da resposta
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return nil

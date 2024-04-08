@@ -3,7 +3,7 @@ package categorias
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -17,7 +17,7 @@ func ListarCategorias(url string) (categorias ResCategoriasPag) {
 	defer resp.Body.Close()
 
 	// Lê o corpo da resposta
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return
