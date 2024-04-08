@@ -1,12 +1,9 @@
 package cartao
 
 import (
-	"bot_controle_cartao/compras"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -27,42 +24,6 @@ func ProcessoAcoesCartoes(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userC
 		//case "cadastrar_cartao":
 		//	inicioCriacaoFatura(bot, message.Chat.ID, userStates)
 		//	userCartaoState.CurrentStepBool = true
-	}
-}
-
-// ProcessarCasosStepExtratoCartao é a função responsável por controlar os steps do usuário para o fluxo de extrato de um cartão
-func ProcessarCasosStepExtratoCartao(userStatesCartao *UserStateCartao, bot *tgbotapi.BotAPI, update tgbotapi.Update) {
-	switch userStatesCartao.CurrentStep {
-	case "selecionar_ano":
-		userStatesCartao.NovoCartaoData.ID = update.CallbackQuery.Data
-
-		EnviarOpcoesAno(bot, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery, userStatesCartao)
-	case "ano_selecionado":
-		idCartaoUUID, err := uuid.Parse(userStatesCartao.NovoCartaoData.ID)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		edit := tgbotapi.NewEditMessageText(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, fmt.Sprintf("Cartão Selecionado: %s", update.CallbackQuery.Data))
-		edit.ReplyMarkup = nil
-
-		_, err = bot.Send(edit)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		pdfContent := compras.ObterComprasPdf(nil, &idCartaoUUID)
-
-		msgPdfCompras := tgbotapi.NewDocumentUpload(update.CallbackQuery.Message.Chat.ID, tgbotapi.FileReader{
-			Name:   "compras_" + update.CallbackQuery.Data + ".pdf",
-			Reader: bytes.NewBuffer(pdfContent),
-			Size:   int64(len(pdfContent)),
-		})
-
-		_, err = bot.Send(msgPdfCompras)
-		if err != nil {
-			log.Panic(err)
-		}
 	}
 }
 
@@ -219,6 +180,33 @@ func ListarCartoes(url string) (cartoes ResPag) {
 	fmt.Println("Resposta da API:", string(body))
 
 	if err := json.Unmarshal(body, &cartoes); err != nil {
+		fmt.Println("Erro ao decodificar a resposta JSON:", err)
+		return
+	}
+
+	return
+}
+
+// BuscarCartao é responsável por buscar o cartão de acordo com o id
+func BuscarCartao(url string, id string) (cartao Res) {
+	resp, err := http.Get(url + fmt.Sprintf("/%s", id))
+	if err != nil {
+		fmt.Println("Erro ao fazer a requisição:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Lê o corpo da resposta
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Erro ao ler a resposta:", err)
+		return
+	}
+
+	// Imprime a resposta da API
+	fmt.Println("Resposta da API:", string(body))
+
+	if err := json.Unmarshal(body, &cartao); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}

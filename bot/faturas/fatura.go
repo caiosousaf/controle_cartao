@@ -203,7 +203,9 @@ func EnviarOpcoesCartoesFatura(bot *tgbotapi.BotAPI, chatID int64, cartao *carta
 
 // EnviarOpcoesFaturas Função para enviar botões inline de seleção de faturas
 func EnviarOpcoesFaturas(bot *tgbotapi.BotAPI, chatID int64, faturas *ResPagFaturas, userStates *UserStepComprasFatura, callbackQuery *tgbotapi.CallbackQuery) {
-	edit := tgbotapi.NewEditMessageText(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, fmt.Sprintf("Cartão Selecionado: %s", callbackQuery.Data))
+	res := cartao.BuscarCartao(cartao.BaseURLCartao, callbackQuery.Data)
+
+	edit := tgbotapi.NewEditMessageText(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, fmt.Sprintf("Cartão Selecionado: %s", *res.Nome))
 	edit.ReplyMarkup = nil
 
 	_, err := bot.Send(edit)

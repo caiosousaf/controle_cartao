@@ -2,8 +2,12 @@ package main
 
 import (
 	"bot_controle_cartao/cartao"
+	"bot_controle_cartao/compras"
 	"bot_controle_cartao/faturas"
+	"bytes"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -41,6 +45,11 @@ func main() {
 		Cartoes: []string{},
 		Opcao:   nil,
 	}
+	userCompras := &compras.UserStateCompras{
+		CurrentStep:     nil,
+		CurrentStepBool: false,
+		NovaCompraData:  compras.NovaCompra{},
+	}
 
 	var (
 		AcaoAnterior string
@@ -62,11 +71,53 @@ func main() {
 			log.Printf("[%s] %s", update.CallbackQuery.From.UserName, update.CallbackQuery.Message.Text)
 
 			if AcaoAnterior == "cartoes" {
-				cartao.ProcessarCasosStepExtratoCartao(userStatesCartao, bot, update)
+				switch userStatesCartao.CurrentStep {
+				case "selecionar_ano":
+					userStatesCartao.NovoCartaoData.ID = update.CallbackQuery.Data
+
+					cartao.EnviarOpcoesAno(bot, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery, userStatesCartao)
+				case "ano_selecionado":
+					idCartaoUUID, err := uuid.Parse(userStatesCartao.NovoCartaoData.ID)
+					if err != nil {
+						log.Panic(err)
+					}
+
+					edit := tgbotapi.NewEditMessageText(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, fmt.Sprintf("Cartão Selecionado: %s", update.CallbackQuery.Data))
+					edit.ReplyMarkup = nil
+
+					_, err = bot.Send(edit)
+					if err != nil {
+						log.Panic(err)
+					}
+
+					pdfContent := compras.ObterComprasPdf(nil, &idCartaoUUID)
+
+					msgPdfCompras := tgbotapi.NewDocumentUpload(update.CallbackQuery.Message.Chat.ID, tgbotapi.FileReader{
+						Name:   "compras_" + update.CallbackQuery.Data + ".pdf",
+						Reader: bytes.NewBuffer(pdfContent),
+						Size:   int64(len(pdfContent)),
+					})
+
+					_, err = bot.Send(msgPdfCompras)
+					if err != nil {
+						log.Panic(err)
+					}
+				}
 			}
 
 			if AcaoAnterior == "faturas" {
 				faturas.ProcessarCasosStepComprasFatura(userCompraFaturas, bot, update)
+			}
+
+			if AcaoAnterior == "compras" {
+				switch *userCompras.CurrentStep {
+				case "selecionar_fatura":
+					faturasCartao := faturas.ListarFaturas(fmt.Sprintf(faturas.BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
+
+					compras.EnviarOpcoesFaturasCompras(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompras, update.CallbackQuery)
+				case "fatura_selecionada":
+
+				}
 			}
 		} else if update.Message != nil {
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
@@ -94,6 +145,7 @@ func main() {
 				if err != nil {
 					log.Panic(err)
 				}
+
 				AcaoAnterior = "start"
 			}
 
@@ -107,6 +159,12 @@ func main() {
 				faturas.ProcessoAcoesFaturas(bot, update.Message, userStates, userCompraFaturas)
 
 				AcaoAnterior = "faturas"
+			}
+
+			if update.Message.Text == "compras" || update.Message.Text == "/compras" || AcaoAnterior == "compras" {
+				compras.ProcessoAcoesCompras(bot, update.Message, userCompras)
+
+				AcaoAnterior = "compras"
 			}
 		}
 	}

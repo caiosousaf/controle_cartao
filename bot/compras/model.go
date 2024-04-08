@@ -10,6 +10,25 @@ const (
 	BaseURLComprasPdf = "http://localhost:8080/cadastros/compras/pdf"
 )
 
+// UserStateCompras Struct para armazenar o estado da conversa do usuário para ações de compras
+type UserStateCompras struct {
+	CurrentStep     *string
+	CurrentStepBool bool
+	NovaCompraData  NovaCompra
+}
+
+// NovaCompra Struct para armazenar os dados de uma nova compra
+type NovaCompra struct {
+	Nome               *string    `json:"nome,omitempty"`
+	Descricao          *string    `json:"descricao,omitempty"`
+	LocalCompra        *string    `json:"local_compra,omitempty"`
+	CategoriaID        *uuid.UUID `json:"categoria_id,omitempty"`
+	ValorParcela       *float64   `json:"valor_parcela,omitempty"`
+	ParcelaAtual       *int64     `json:"parcela_atual,omitempty"`
+	QuantidadeParcelas *int64     `json:"quantidade_parcelas,omitempty"`
+	DataCompra         *string    `json:"data_compra,omitempty"`
+}
+
 // ResCompras modela uma resposta para listagem e busca de compras
 type ResCompras struct {
 	ID                 *uuid.UUID `json:"id" apelido:"id"`
