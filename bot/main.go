@@ -2,6 +2,7 @@ package main
 
 import (
 	"bot_controle_cartao/cartao"
+	"bot_controle_cartao/categorias"
 	"bot_controle_cartao/compras"
 	"bot_controle_cartao/faturas"
 	"bytes"
@@ -46,6 +47,7 @@ func main() {
 		Opcao:   nil,
 	}
 	userCompras := &compras.UserStateCompras{
+		FaturaID:        nil,
 		CurrentStep:     nil,
 		CurrentStepBool: false,
 		NovaCompraData:  compras.NovaCompra{},
@@ -114,9 +116,15 @@ func main() {
 				case "selecionar_fatura":
 					faturasCartao := faturas.ListarFaturas(fmt.Sprintf(faturas.BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
 
-					compras.EnviarOpcoesFaturasCompras(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompras, update.CallbackQuery)
+					faturas.EnviarOpcoesFaturas(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompraFaturas, userCompras, update.CallbackQuery)
 				case "fatura_selecionada":
+					categoriasCompras := categorias.ListarCategorias(categorias.BaseURLCategoria)
 
+					compras.EnviarOpcoesCategoriasCompras(bot, update.CallbackQuery.Message.Chat.ID, &categoriasCompras, userCompras, update.CallbackQuery)
+				case "categoria_selecionada":
+					compras.InicioCriacaoCompra(bot, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery, userCompras)
+
+					AcaoAnterior = "cadastro_de_compra"
 				}
 			}
 		} else if update.Message != nil {
@@ -165,6 +173,12 @@ func main() {
 				compras.ProcessoAcoesCompras(bot, update.Message, userCompras)
 
 				AcaoAnterior = "compras"
+			}
+
+			if AcaoAnterior == "cadastro_de_compra" {
+				if userCompras.CurrentStep != nil {
+					compras.ProcessoAcoesCadastroCompra(bot, update.Message, userCompras)
+				}
 			}
 		}
 	}

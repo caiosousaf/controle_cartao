@@ -12,6 +12,7 @@ const (
 
 // UserStateCompras Struct para armazenar o estado da conversa do usuário para ações de compras
 type UserStateCompras struct {
+	FaturaID        *string
 	CurrentStep     *string
 	CurrentStepBool bool
 	NovaCompraData  NovaCompra
