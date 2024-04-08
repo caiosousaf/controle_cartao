@@ -5,54 +5,13 @@ import (
 	"bot_controle_cartao/compras"
 	"bot_controle_cartao/faturas"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 )
-
-func realizarGetString(url string) (msgGet string) {
-	// Realiza a requisição GET para a API
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	// Lê o corpo da resposta
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Erro ao ler a resposta:", err)
-		return
-	}
-
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	var cartoes cartao.ResPag
-	if err := json.Unmarshal(body, &cartoes); err != nil {
-		fmt.Println("Erro ao decodificar a resposta JSON:", err)
-		return
-	}
-
-	for _, cartao := range cartoes.Dados {
-		msgGet += fmt.Sprintf("<i>ID: %s\n\n</i>", cartao.ID.String())
-		msgGet += fmt.Sprintf("<i>Nome: %s\n\n</i>", *cartao.Nome)
-		msgGet += fmt.Sprintf("<i>Data de Criação: %s\n\n</i>", cartao.DataCriacao.String())
-		if cartao.DataDesativacao != nil {
-			msgGet += fmt.Sprintf("<i>Data de Desativação: %s\n\n</i>", cartao.DataDesativacao.String())
-		}
-		msgGet += "------\n\n"
-	}
-
-	return
-}
 
 func init() {
 	if err := godotenv.Load("server/.env"); err != nil {
