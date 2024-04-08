@@ -253,10 +253,21 @@ func EnviarOpcoesFaturas(bot *tgbotapi.BotAPI, chatID int64, faturas *ResPagFatu
 	userStates.Opcao = &step
 }
 
-// ProcessCallbackQuery Função para processar a escolha do usuário
+// ProcessarCasosStepComprasFatura é responsável por controlar o fluxo que obtém as compras de uma fatura
+func ProcessarCasosStepComprasFatura(userCompraFaturas *UserStepComprasFatura, bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+	switch *userCompraFaturas.Opcao {
+	case "fatura_selecionada":
+		faturasCartao := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
+
+		EnviarOpcoesFaturas(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompraFaturas, update.CallbackQuery)
+	case "cartao_fatura_selecionado":
+		ProcessCallbackQuery(bot, update.CallbackQuery)
+	}
+}
+
+// ProcessCallbackQuery Função respnsável para processar a escolha do usuário, mostrando as compras realizadas e gerando um pdf com elas
 func ProcessCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.CallbackQuery) {
 	// Obter o ID da fatura a partir do CallbackData
-
 	res := BuscarFatura(&callbackQuery.Data)
 
 	pdfContent := compras.ObterComprasPdf(res.ID, res.FaturaCartaoID)
@@ -292,7 +303,6 @@ func ProcessCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.Callback
 
 	var (
 		msgRetornoCompras string
-		//nomeFatura        string
 	)
 
 	for _, compra := range comprasFatura.Dados {
@@ -341,6 +351,7 @@ func ListarFaturas(url string) (res ResPagFaturas) {
 	return
 }
 
+// BuscarFatura é responsável por realizar uma requisição para obter os dados de uma fatura
 func BuscarFatura(id *string) (res Res) {
 	resp, err := http.Get(BaseURLFatura + *id)
 	if err != nil {
