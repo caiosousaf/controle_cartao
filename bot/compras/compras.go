@@ -20,9 +20,9 @@ import (
 func ProcessoAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCompras) {
 
 	switch message.Text {
-	case "compras":
+	case "Compras":
 		gerarOpcoesAcoesCompras(bot, message)
-	case "cadastrar_compra":
+	case "Cadastrar Compra":
 		cartoes := cartao.ListarCartoes(cartao.BaseURLCartoes)
 
 		EnviarOpcoesCartoesFatura(bot, message.Chat.ID, &cartoes, userCartaoState)
@@ -109,7 +109,7 @@ func ProcessoAcoesCadastroCompra(bot *tgbotapi.BotAPI, message *tgbotapi.Message
 
 // gerarOpcoesAcoesCompras é responsável por gerar os botões para seleção das ações de compras para o usuário
 func gerarOpcoesAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	buttonOpcao1 := tgbotapi.NewKeyboardButton("cadastrar_compra")
+	buttonOpcao1 := tgbotapi.NewKeyboardButton("Cadastrar Compra")
 	buttonOpcao2 := tgbotapi.NewKeyboardButton("Opção 2")
 	buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
 	buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")

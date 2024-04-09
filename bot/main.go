@@ -5,6 +5,7 @@ import (
 	"bot_controle_cartao/categorias"
 	"bot_controle_cartao/compras"
 	"bot_controle_cartao/faturas"
+	"bot_controle_cartao/utils"
 	"bytes"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -102,7 +103,12 @@ func main() {
 
 					_, err = bot.Send(msgPdfCompras)
 					if err != nil {
-						log.Panic(err)
+						if err.Error() == utils.ErroPdfVazio {
+							msgErrArquivoVazio := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "Esse cartão não possui compras no ano selecionado")
+							utils.EnviaMensagem(bot, msgErrArquivoVazio)
+						} else {
+							log.Panic(err)
+						}
 					}
 				}
 			}
@@ -134,9 +140,9 @@ func main() {
 				faturas.EnviaMensagemBoasVindas(bot, update.Message.Chat.ID)
 
 				// Criando um teclado de resposta
-				buttonOpcao1 := tgbotapi.NewKeyboardButton("cartoes")
-				buttonOpcao2 := tgbotapi.NewKeyboardButton("faturas")
-				buttonOpcao3 := tgbotapi.NewKeyboardButton("compras")
+				buttonOpcao1 := tgbotapi.NewKeyboardButton("Cartões")
+				buttonOpcao2 := tgbotapi.NewKeyboardButton("Faturas")
+				buttonOpcao3 := tgbotapi.NewKeyboardButton("Compras")
 				buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
 
 				keyboard := tgbotapi.NewReplyKeyboard(
@@ -157,19 +163,19 @@ func main() {
 				AcaoAnterior = "start"
 			}
 
-			if update.Message.Text == "/cartoes" || update.Message.Text == "cartoes" || AcaoAnterior == "cartoes" {
+			if update.Message.Text == "/Cartões" || update.Message.Text == "Cartões" || AcaoAnterior == "cartoes" {
 				cartao.ProcessoAcoesCartoes(bot, update.Message, userStatesCartao)
 
 				AcaoAnterior = "cartoes"
 			}
 
-			if update.Message.Text == "faturas" || update.Message.Text == "/faturas" || AcaoAnterior == "faturas" {
+			if update.Message.Text == "Faturas" || update.Message.Text == "/Faturas" || AcaoAnterior == "faturas" {
 				faturas.ProcessoAcoesFaturas(bot, update.Message, userStates, userCompraFaturas)
 
 				AcaoAnterior = "faturas"
 			}
 
-			if update.Message.Text == "compras" || update.Message.Text == "/compras" || AcaoAnterior == "compras" {
+			if update.Message.Text == "Compras" || update.Message.Text == "/Compras" || AcaoAnterior == "compras" {
 				compras.ProcessoAcoesCompras(bot, update.Message, userCompras)
 
 				AcaoAnterior = "compras"

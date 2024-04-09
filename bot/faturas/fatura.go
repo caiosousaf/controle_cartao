@@ -26,7 +26,7 @@ func ProcessoAcoesFaturas(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userS
 	}
 
 	switch message.Text {
-	case "faturas":
+	case "Faturas":
 		gerarOpcoesFatura(bot, message)
 	case "Compras Fatura":
 		cartoes := cartao.ListarCartoes(cartao.BaseURLCartoes)

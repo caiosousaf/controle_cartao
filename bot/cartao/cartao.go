@@ -15,21 +15,18 @@ import (
 func ProcessoAcoesCartoes(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCartao) {
 
 	switch message.Text {
-	case "cartoes":
+	case "Cartões":
 		gerarOpcoesAcoesCartao(bot, message)
-	case "extrato":
+	case "Extrato":
 		cartoes := ListarCartoes(BaseURLCartoes)
 
 		gerarOpcoesCartoesDisponiveis(bot, message.Chat.ID, &cartoes, userCartaoState)
-		//case "cadastrar_cartao":
-		//	inicioCriacaoFatura(bot, message.Chat.ID, userStates)
-		//	userCartaoState.CurrentStepBool = true
 	}
 }
 
 // gerarOpcoesAcoesCartao é responsável por gerar os botões para seleção das ações de cartões para o usuário
 func gerarOpcoesAcoesCartao(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	buttonOpcao1 := tgbotapi.NewKeyboardButton("extrato")
+	buttonOpcao1 := tgbotapi.NewKeyboardButton("Extrato")
 	buttonOpcao2 := tgbotapi.NewKeyboardButton("cadastrar_cartao")
 	buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
 	buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
