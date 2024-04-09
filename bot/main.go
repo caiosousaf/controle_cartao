@@ -46,6 +46,7 @@ func main() {
 	userCompraFaturas := &faturas.UserStepComprasFatura{
 		Cartoes: []string{},
 		Opcao:   nil,
+		Fatura:  faturas.Fatura{},
 	}
 	userCompras := &compras.UserStateCompras{
 		FaturaID:        nil,
@@ -53,6 +54,7 @@ func main() {
 		CurrentStepBool: false,
 		NovaCompraData:  compras.NovaCompra{},
 	}
+	userStatusFatura := &faturas.ReqAtualizarStatus{Status: nil}
 
 	var (
 		AcaoAnterior string
@@ -114,7 +116,7 @@ func main() {
 			}
 
 			if AcaoAnterior == "faturas" {
-				faturas.ProcessarCasosStepComprasFatura(userCompraFaturas, bot, update)
+				faturas.ProcessarCasosStepComprasFatura(userCompraFaturas, userStatusFatura, bot, update)
 			}
 
 			if AcaoAnterior == "compras" {

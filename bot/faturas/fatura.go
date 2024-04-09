@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
@@ -35,6 +36,12 @@ func ProcessoAcoesFaturas(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userS
 	case "cadastrar_fatura":
 		inicioCriacaoFatura(bot, message.Chat.ID, userStates)
 		userStates[message.Chat.ID].CurrentStepBool = true
+	case "Pagar Fatura":
+		cartoes := cartao.ListarCartoes(cartao.BaseURLCartoes)
+
+		EnviarOpcoesCartoesFatura(bot, message.Chat.ID, &cartoes, userCompraFatura)
+
+		*userCompraFatura.Opcao = "Pagar Fatura"
 	}
 }
 
@@ -140,7 +147,7 @@ func gerarOpcoesFatura(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	// Criando um teclado de resposta
 	buttonOpcao1 := tgbotapi.NewKeyboardButton("Compras Fatura")
 	buttonOpcao2 := tgbotapi.NewKeyboardButton("cadastrar_fatura")
-	buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
+	buttonOpcao3 := tgbotapi.NewKeyboardButton("Pagar Fatura")
 	buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
 
 	keyboard := tgbotapi.NewReplyKeyboard(
@@ -246,7 +253,7 @@ func EnviarOpcoesFaturas(bot *tgbotapi.BotAPI, chatID int64, faturas *ResPagFatu
 }
 
 // ProcessarCasosStepComprasFatura é responsável por controlar o fluxo que obtém as compras de uma fatura
-func ProcessarCasosStepComprasFatura(userCompraFaturas *UserStepComprasFatura, bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func ProcessarCasosStepComprasFatura(userCompraFaturas *UserStepComprasFatura, reqStatus *ReqAtualizarStatus, bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	switch *userCompraFaturas.Opcao {
 	case "fatura_selecionada":
 		faturasCartao := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
@@ -254,6 +261,34 @@ func ProcessarCasosStepComprasFatura(userCompraFaturas *UserStepComprasFatura, b
 		EnviarOpcoesFaturas(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompraFaturas, nil, update.CallbackQuery)
 	case "cartao_fatura_selecionado":
 		ProcessCallbackQuery(bot, update.CallbackQuery)
+	case "Pagar Fatura":
+		faturasCartao := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data))
+
+		EnviarOpcoesFaturas(bot, update.CallbackQuery.Message.Chat.ID, &faturasCartao, userCompraFaturas, nil, update.CallbackQuery)
+
+		*userCompraFaturas.Opcao = "pagar_fatura_selecionado"
+	case "pagar_fatura_selecionado":
+		faturaID, err := uuid.Parse(update.CallbackQuery.Data)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		userCompraFaturas.Fatura.ID = &faturaID
+
+		EnviaOpcoesNovoStatusFatura(bot, update.CallbackQuery.Message.Chat.ID, update.CallbackQuery, userCompraFaturas)
+	case "status_selecionado":
+		reqStatus.Status = &update.CallbackQuery.Data
+
+		err := AtualizarStatusPagamentoFatura(userCompraFaturas.Fatura.ID, reqStatus)
+		if err.Err != nil {
+			edit := tgbotapi.NewEditMessageText(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, *err.Err)
+			utils.EnviaMensagem(bot, edit)
+			return
+		}
+
+		edit := tgbotapi.NewEditMessageText(update.CallbackQuery.Message.Chat.ID, update.CallbackQuery.Message.MessageID, fmt.Sprintf("Novo Status da Fatura: %s", update.CallbackQuery.Data))
+		edit.ReplyMarkup = nil
+		utils.EnviaMensagem(bot, edit)
 	}
 }
 
@@ -317,6 +352,40 @@ func ProcessCallbackQuery(bot *tgbotapi.BotAPI, callbackQuery *tgbotapi.Callback
 	utils.EnviaMensagem(bot, msgPdfCompras)
 }
 
+// EnviaOpcoesNovoStatusFatura realiza o envio das opções disponíveis para mudar o status de uma fatura
+func EnviaOpcoesNovoStatusFatura(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbotapi.CallbackQuery, userCompraFaturas *UserStepComprasFatura) {
+	res := BuscarFatura(&callbackQuery.Data)
+	var (
+		buttons []tgbotapi.InlineKeyboardButton
+		options = []string{"Em Aberto", "Pago", "Atrasada"}
+	)
+
+	edit := tgbotapi.NewEditMessageText(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, fmt.Sprintf("Status atual da fatura: %s", *res.Status))
+	edit.ReplyMarkup = nil
+	utils.EnviaMensagem(bot, edit)
+
+	for _, status := range options {
+		button := tgbotapi.NewInlineKeyboardButtonData(status, status)
+
+		buttons = append(buttons, button)
+	}
+
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(buttons)
+
+	msg := tgbotapi.NewMessage(chatID, "Selecione o novo status da fatura!")
+	msg.ReplyMarkup = keyboard
+
+	// Enviar a mensagem
+	_, err := bot.Send(msg)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	step := "status_selecionado"
+
+	userCompraFaturas.Opcao = &step
+}
+
 func ListarFaturas(url string) (res ResPagFaturas) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -359,10 +428,60 @@ func BuscarFatura(id *string) (res Res) {
 		return
 	}
 
+	if err := json.Unmarshal(body, &res); err != nil {
+		fmt.Println("Erro ao decodificar a resposta JSON:", err)
+		return
+	}
+
+	return
+}
+
+type Sla struct {
+	Err *string `json:"error"`
+}
+
+// AtualizarStatusPagamentoFatura é responsável por realizar a requisição para atualização do status de uma fatura
+func AtualizarStatusPagamentoFatura(faturaID *uuid.UUID, dadosStatus *ReqAtualizarStatus) (slaa Sla) {
+	dados := ReqAtualizarStatus{
+		Status: dadosStatus.Status,
+	}
+
+	dadosJSON, err := json.Marshal(dados)
+	if err != nil {
+		fmt.Println("Erro ao codificar os dados JSON:", err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodPut, BaseURLFatura+fmt.Sprintf("%s/status", faturaID.String()), bytes.NewBuffer(dadosJSON))
+	if err != nil {
+		fmt.Println("Erro ao criar a requisição PUT:", err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Erro ao fazer a requisição PUT:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Erro ao ler a resposta:", err)
+		return
+	}
+
+	//if resp.StatusCode != http.StatusOK {
+	//	err = utils.NewErr(string(body))
+	//	return err
+	//}
+
 	// Imprime a resposta da API
 	fmt.Println("Resposta da API:", string(body))
 
-	if err := json.Unmarshal(body, &res); err != nil {
+	if err := json.Unmarshal(body, &slaa); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}

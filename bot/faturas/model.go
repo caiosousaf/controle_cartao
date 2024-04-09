@@ -24,6 +24,7 @@ type UserStepComprasFatura struct {
 	ComprasFatura bool
 	Cartoes       []string
 	Opcao         *string
+	Fatura        Fatura
 }
 
 type Fatura struct {
@@ -31,6 +32,10 @@ type Fatura struct {
 	ID       *uuid.UUID
 	Nome     *string
 	CartaoID *uuid.UUID
+}
+
+type ReqAtualizarStatus struct {
+	Status *string `json:"status"`
 }
 
 const (
