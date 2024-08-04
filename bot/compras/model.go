@@ -12,10 +12,11 @@ const (
 
 // UserStateCompras Struct para armazenar o estado da conversa do usuário para ações de compras
 type UserStateCompras struct {
-	FaturaID        *string
-	CurrentStep     *string
-	CurrentStepBool bool
-	NovaCompraData  NovaCompra
+	FaturaID          *string
+	CurrentStep       *string
+	CurrentStepBool   bool
+	NovaCompraData    NovaCompra
+	ObterTotalCompras ObterCompras
 }
 
 // NovaCompra Struct para armazenar os dados de uma nova compra
@@ -28,6 +29,14 @@ type NovaCompra struct {
 	ParcelaAtual       *int64     `json:"parcela_atual,omitempty"`
 	QuantidadeParcelas *int64     `json:"quantidade_parcelas,omitempty"`
 	DataCompra         *string    `json:"data_compra,omitempty"`
+}
+
+// ObterCompras struct que armazena os dados de filtragem para obter valor compras
+type ObterCompras struct {
+	DataEspecifica   *string
+	Pago             *bool
+	UltimaParcela    *bool
+	StepComprasTotal *bool
 }
 
 // ResCompras modela uma resposta para listagem e busca de compras
@@ -52,4 +61,9 @@ type ResComprasPag struct {
 	Dados []ResCompras `json:"dados,omitempty"`
 	Prox  *bool        `json:"prox,omitempty"`
 	Total *int64       `json:"total,omitempty"`
+}
+
+// ResObterComprasTotal modela uma lista de resposta para obter o valor total das compras
+type ResObterComprasTotal struct {
+	Total *string `json:"total"`
 }

@@ -49,10 +49,11 @@ func main() {
 		Fatura:  faturas.Fatura{},
 	}
 	userCompras := &compras.UserStateCompras{
-		FaturaID:        nil,
-		CurrentStep:     nil,
-		CurrentStepBool: false,
-		NovaCompraData:  compras.NovaCompra{},
+		FaturaID:          nil,
+		CurrentStep:       nil,
+		CurrentStepBool:   false,
+		NovaCompraData:    compras.NovaCompra{},
+		ObterTotalCompras: compras.ObterCompras{},
 	}
 	userStatusFatura := &faturas.ReqAtualizarStatus{Status: nil}
 
@@ -178,7 +179,7 @@ func main() {
 			}
 
 			if update.Message.Text == "Compras" || update.Message.Text == "/Compras" || AcaoAnterior == "compras" {
-				compras.ProcessoAcoesCompras(bot, update.Message, userCompras)
+				compras.ProcessoAcoesCompras(bot, update.Message, userCompras, AcaoAnterior)
 
 				AcaoAnterior = "compras"
 			}

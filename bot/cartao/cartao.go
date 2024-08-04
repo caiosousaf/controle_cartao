@@ -106,9 +106,6 @@ func EnviarOpcoesAno(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbotapi
 		lastFiveYears[i] = year
 	}
 
-	// Imprime o array
-	fmt.Println(lastFiveYears)
-
 	for _, anoPossivel := range lastFiveYears {
 		anoPossivelString := strconv.Itoa(anoPossivel)
 		button := tgbotapi.NewInlineKeyboardButtonData(anoPossivelString, anoPossivelString)

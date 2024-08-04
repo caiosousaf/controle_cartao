@@ -17,7 +17,7 @@ import (
 )
 
 // ProcessoAcoesCompras é responsável por coordenar as ações relacionadas a compras
-func ProcessoAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCompras) {
+func ProcessoAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCompras, acaoAnterior string) {
 
 	switch message.Text {
 	case "Compras":
@@ -26,6 +26,89 @@ func ProcessoAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userC
 		cartoes := cartao.ListarCartoes(cartao.BaseURLCartoes)
 
 		EnviarOpcoesCartoesFatura(bot, message.Chat.ID, &cartoes, userCartaoState)
+	case "Obter total compras":
+		InicioObterTotalCompras(userCartaoState)
+	}
+
+	if acaoAnterior == "compras" {
+		ProcessamentoObterTotalCompras(bot, message, userCartaoState)
+	}
+}
+
+// ProcessamentoObterTotalCompras é responsável por processar o fluxo para obter o valor total compras
+func ProcessamentoObterTotalCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCompras *UserStateCompras) {
+	var cancelado bool
+
+	switch *userCompras.CurrentStep {
+	case "selecionar_data":
+		*userCompras.CurrentStep = "selecionar_pago"
+
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Por favor, Digite a data esperada para filtragem. Ex: 08/2024 \n")
+		utils.EnviaMensagem(bot, msg)
+
+		msg = tgbotapi.NewMessage(message.Chat.ID, "A qualquer momento digite 'cancelar' para cancelar essa operação \n")
+		utils.EnviaMensagem(bot, msg)
+	case "selecionar_pago":
+		cancelado = utils.CancelarOperacao(bot, &message.Text, userCompras.CurrentStep, message.Chat.ID)
+
+		if !cancelado {
+			*userCompras.CurrentStep = "selecionar_ultima_parcela"
+
+			userCompras.ObterTotalCompras.DataEspecifica = &message.Text
+
+			msg := tgbotapi.NewMessage(message.Chat.ID, "Você gostaria que fosse excluído da soma, os valores que já foram pagos? Digite: SIM ou NÃO")
+			utils.EnviaMensagem(bot, msg)
+		}
+	case "selecionar_ultima_parcela":
+		cancelado = utils.CancelarOperacao(bot, &message.Text, userCompras.CurrentStep, message.Chat.ID)
+
+		if !cancelado {
+			switch strings.ToLower(message.Text) {
+			case "sim":
+				userCompras.ObterTotalCompras.Pago = utils.ObterPonteiro[bool](true)
+				*userCompras.CurrentStep = "requisicao_obter_valor"
+
+				msg := tgbotapi.NewMessage(message.Chat.ID, "Você gostaria que retornasse a soma apenas dos valores que estão na última parcela? Digite: SIM ou NÃO")
+				utils.EnviaMensagem(bot, msg)
+			case "não":
+				userCompras.ObterTotalCompras.Pago = utils.ObterPonteiro[bool](false)
+				*userCompras.CurrentStep = "requisicao_obter_valor"
+
+				msg := tgbotapi.NewMessage(message.Chat.ID, "Você gostaria que retornasse a soma apenas dos valores que estão na última parcela? Digite: SIM ou NÃO")
+				utils.EnviaMensagem(bot, msg)
+			default:
+				msg := tgbotapi.NewMessage(message.Chat.ID, "Valor incorreto, digite novamente")
+				utils.EnviaMensagem(bot, msg)
+			}
+		}
+	case "requisicao_obter_valor":
+		cancelado = utils.CancelarOperacao(bot, &message.Text, userCompras.CurrentStep, message.Chat.ID)
+
+		if !cancelado {
+			var res *ResObterComprasTotal
+
+			switch strings.ToLower(message.Text) {
+			case "sim":
+				userCompras.ObterTotalCompras.UltimaParcela = utils.ObterPonteiro[bool](true)
+				userCompras.CurrentStep = nil
+
+				res = ObterComprasTotal(userCompras)
+
+				msg := tgbotapi.NewMessage(message.Chat.ID, "Valor total: "+*res.Total)
+				utils.EnviaMensagem(bot, msg)
+			case "não":
+				userCompras.ObterTotalCompras.UltimaParcela = utils.ObterPonteiro[bool](false)
+				userCompras.CurrentStep = nil
+
+				res = ObterComprasTotal(userCompras)
+
+				msg := tgbotapi.NewMessage(message.Chat.ID, "Valor total: "+*res.Total)
+				utils.EnviaMensagem(bot, msg)
+			default:
+				msg := tgbotapi.NewMessage(message.Chat.ID, "Valor incorreto, digite novamente")
+				utils.EnviaMensagem(bot, msg)
+			}
+		}
 	}
 }
 
@@ -110,7 +193,7 @@ func ProcessoAcoesCadastroCompra(bot *tgbotapi.BotAPI, message *tgbotapi.Message
 // gerarOpcoesAcoesCompras é responsável por gerar os botões para seleção das ações de compras para o usuário
 func gerarOpcoesAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	buttonOpcao1 := tgbotapi.NewKeyboardButton("Cadastrar Compra")
-	buttonOpcao2 := tgbotapi.NewKeyboardButton("Opção 2")
+	buttonOpcao2 := tgbotapi.NewKeyboardButton("Obter total compras")
 	buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
 	buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
 
@@ -161,6 +244,13 @@ func EnviarOpcoesCartoesFatura(bot *tgbotapi.BotAPI, chatID int64, cartao *carta
 	step := "selecionar_fatura"
 
 	userStatesCompras.CurrentStep = &step
+}
+
+// InicioObterTotalCompras é responsável por enviar as opções de filtragem
+func InicioObterTotalCompras(stateCompras *UserStateCompras) {
+	step := "selecionar_data"
+	stateCompras.CurrentStep = &step
+	stateCompras.ObterTotalCompras.StepComprasTotal = utils.ObterPonteiro(true)
 }
 
 // EnviarOpcoesCategoriasCompras é responsável por envia via telegram as categorias das compras
@@ -347,4 +437,49 @@ func ObterComprasPdf(idFatura *uuid.UUID, idCartao *uuid.UUID) []byte {
 	fmt.Println("Resposta da API:", string(body))
 
 	return body
+}
+
+// ObterComprasTotal é responsável por realizar a requisição que obtém o valor total das compras
+func ObterComprasTotal(stateCompra *UserStateCompras) (res *ResObterComprasTotal) {
+	var (
+		resp *http.Response
+		err  error
+	)
+
+	var urlObterCompras = BaseURLCompras
+
+	urlObterCompras += fmt.Sprintf("/total?data_especifica=%s", *stateCompra.ObterTotalCompras.DataEspecifica)
+
+	if *stateCompra.ObterTotalCompras.Pago {
+		urlObterCompras += fmt.Sprintf("&pago=%v", *stateCompra.ObterTotalCompras.Pago)
+	}
+
+	if *stateCompra.ObterTotalCompras.UltimaParcela {
+		urlObterCompras += fmt.Sprintf("&ultima_parcela=%v", *stateCompra.ObterTotalCompras.UltimaParcela)
+	}
+
+	resp, err = http.Get(urlObterCompras)
+	if err != nil {
+		fmt.Println("Erro ao fazer a requisição:", err)
+		return nil
+	}
+
+	defer resp.Body.Close()
+
+	// Lê o corpo da resposta
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Erro ao ler a resposta:", err)
+		return nil
+	}
+
+	// Imprime a resposta da API
+	fmt.Println("Resposta da API:", string(body))
+
+	if err := json.Unmarshal(body, &res); err != nil {
+		fmt.Println("Erro ao decodificar a resposta JSON:", err)
+		return
+	}
+
+	return
 }
