@@ -182,9 +182,10 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 	defer db.Close()
 
 	var (
-		repo         = compras.NovoRepo(db)
-		repoFatura   = faturas.NovoRepo(db)
-		paramsFatura = new(utils.Parametros)
+		repo             = compras.NovoRepo(db)
+		repoFatura       = faturas.NovoRepo(db)
+		paramsFatura     = new(utils.Parametros)
+		valorTotalFatura float64
 	)
 
 	params.Limite = utils.MaxLimit
@@ -242,7 +243,7 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 				return pdf, utils.Wrap(err, msgErrPadrao)
 			}
 
-			tabelaFaturasPdf(pdf, listaCompras, tamanhoCel, alturaCel)
+			tabelaFaturasPdf(pdf, listaCompras, nil, tamanhoCel, alturaCel)
 
 			params.RemoverFiltros("fatura_id")
 		}
@@ -255,9 +256,15 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 		return pdf, utils.Wrap(err, msgErrPadrao)
 	}
 
+	for _, compra := range listaCompras.Dados {
+		valorTotalFatura += *compra.ValorParcela
+	}
+
+	valorTotalFaturaString := strconv.FormatFloat(valorTotalFatura, 'f', -1, 64)
+
 	pdf, err = gerarPdf()
 
-	tabelaFaturasPdf(pdf, listaCompras, tamanhoCel, alturaCel)
+	tabelaFaturasPdf(pdf, listaCompras, &valorTotalFaturaString, tamanhoCel, alturaCel)
 
 	return
 }
@@ -277,8 +284,8 @@ func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 	return
 }
 
-// tabelaFaturasPdf
-func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, tamanho, altura float64) {
+// tabelaFaturasPdf é a função responsável por montar o pdf com as faturas e suas compras
+func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, valorTotalFatura *string, tamanho, altura float64) {
 	left := float64(40)
 
 	leftTitulo := float64(90)
@@ -286,7 +293,11 @@ func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, tamanho,
 
 	pdf.SetFont("Caviar Bold", "B", 12)
 
-	pdf.CellFormat(tamanho, altura, fmt.Sprintf("Fatura do mês de %s", *listaCompras.Dados[0].NomeFatura), "0", 0, "C", false, 0, "")
+	if valorTotalFatura != nil {
+		pdf.CellFormat(tamanho, altura, fmt.Sprintf("Fatura do mês de %s - Valor total: R$ %s", *listaCompras.Dados[0].NomeFatura, *valorTotalFatura), "0", 0, "C", false, 0, "")
+	} else {
+		pdf.CellFormat(tamanho, altura, fmt.Sprintf("Fatura do mês de %s", *listaCompras.Dados[0].NomeFatura), "0", 0, "C", false, 0, "")
+	}
 
 	pdf.Ln(-1)
 	pdf.Ln(-1)

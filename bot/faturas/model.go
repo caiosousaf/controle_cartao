@@ -24,6 +24,7 @@ type UserStepComprasFatura struct {
 	ComprasFatura bool
 	Cartoes       []string
 	Opcao         *string
+	Fatura        Fatura
 }
 
 type Fatura struct {
@@ -33,12 +34,11 @@ type Fatura struct {
 	CartaoID *uuid.UUID
 }
 
-var (
-	AcaoAnterior string
-)
+type ReqAtualizarStatus struct {
+	Status *string `json:"status"`
+}
 
 const (
-	BaseURLCartoes = "http://localhost:8080/cadastros/cartoes"
 	BaseURLFaturas = "http://localhost:8080/cadastros/cartao/"
 	BaseURLFatura  = "http://localhost:8080/cadastros/fatura/"
 )
