@@ -1,4 +1,4 @@
-# Financial Manager - Cartões e Faturas
+# Controle Financeiro - Cartões e Faturas
 
 Este é um projeto de controle financeiro focado em cartões de crédito e suas faturas. Com ele, você pode realizar ações essenciais como cadastrar cartões, gerenciar faturas e registrar compras, com um diferencial importante no controle de compras parceladas.
 
@@ -21,4 +21,4 @@ Este é um projeto de controle financeiro focado em cartões de crédito e suas 
 
 1. **Clone o repositório**:
    ```bash
-   git clone https://github.com/seuusuario/financial-manager.git
+   git clone https://github.com/seuusuario/controle-cartao.git
