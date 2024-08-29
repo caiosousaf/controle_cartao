@@ -10,16 +10,9 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
-
-func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatalf("Erro ao carregar arquivo .env: %v", err)
-	}
-}
 
 func main() {
 
