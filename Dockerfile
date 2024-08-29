@@ -4,9 +4,6 @@ FROM golang:1.18-alpine
 # Definir o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Baixar as dependências (caso existam)
-RUN go mod download
-
 # Copiar os arquivos da API para o contêiner
 COPY ./server /app
 
