@@ -65,6 +65,17 @@ func main() {
 		log.Panic(err)
 	}
 
+	go func() {
+		log.Println("Starting HTTP server on port 8079...")
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Bot is running"))
+		})
+		if err := http.ListenAndServe(":8079", nil); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	// Loop pelas atualizações recebidas do bot
 	for update := range updates {
 		if update.CallbackQuery != nil {
@@ -186,14 +197,4 @@ func main() {
 		}
 	}
 
-	go func() {
-		log.Println("Starting HTTP server on port 8079...")
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Bot is running"))
-		})
-		if err := http.ListenAndServe(":8079", nil); err != nil {
-			log.Fatal(err)
-		}
-	}()
 }
