@@ -4,9 +4,6 @@ FROM golang:1.18-alpine
 # Definir o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copiar o arquivo go.mod e go.sum primeiro para aproveitar o cache de dependências
-COPY go.mod go.sum ./
-
 # Baixar as dependências (caso existam)
 RUN go mod download
 
