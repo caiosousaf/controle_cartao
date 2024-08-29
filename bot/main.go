@@ -11,6 +11,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/google/uuid"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -184,4 +185,15 @@ func main() {
 			}
 		}
 	}
+
+	go func() {
+		log.Println("Starting HTTP server on port 8079...")
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Bot is running"))
+		})
+		if err := http.ListenAndServe(":8079", nil); err != nil {
+			log.Fatal(err)
+		}
+	}()
 }
