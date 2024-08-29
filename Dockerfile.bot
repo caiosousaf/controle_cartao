@@ -11,5 +11,7 @@ COPY ./bot /app
 RUN go mod tidy
 RUN go build -o bot
 
+COPY .env /app/.env
+
 # Comando para rodar o bot
 CMD ["./bot"]
