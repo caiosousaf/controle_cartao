@@ -330,7 +330,9 @@ func InicioCriacaoCompra(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbo
 
 // ListarComprasFatura é responsável por realizar a requisição de listagem para compras
 func ListarComprasFatura(idFatura *string) (res ResComprasPag) {
-	resp, err := http.Get(BaseURLCompras + "?fatura_id=" + *idFatura)
+	var ambiente = utils.ValidarAmbiente()
+
+	resp, err := http.Get(ambiente + BaseURLCompras + "?fatura_id=" + *idFatura)
 	if err != nil {
 		fmt.Println("Erro ao fazer a requisição:", err)
 		return
@@ -357,7 +359,9 @@ func ListarComprasFatura(idFatura *string) (res ResComprasPag) {
 
 // CadastrarCompra é responsável por realizar a requisição para cadastrar uma compra
 func CadastrarCompra(compras *UserStateCompras) (res ResComprasPag) {
-	const baseURLCadastroCompras = "http://localhost:8080/cadastros/fatura"
+	var ambiente = utils.ValidarAmbiente()
+
+	var baseURLCadastroCompras = fmt.Sprintf("%s/cadastros/fatura", ambiente)
 	// Montar os dados a serem enviados no corpo do POST
 	dados := NovaCompra{
 		Nome:               compras.NovaCompraData.Nome,
@@ -410,8 +414,10 @@ func ObterComprasPdf(idFatura *uuid.UUID, idCartao *uuid.UUID) []byte {
 		err  error
 	)
 
+	var ambiente = utils.ValidarAmbiente()
+
 	if idFatura != nil && idCartao != nil {
-		resp, err = http.Get(BaseURLComprasPdf + "?fatura_id=" + idFatura.String() + "&cartao_id=" + idCartao.String())
+		resp, err = http.Get(ambiente + BaseURLComprasPdf + "?fatura_id=" + idFatura.String() + "&cartao_id=" + idCartao.String())
 		if err != nil {
 			fmt.Println("Erro ao fazer a requisição:", err)
 			return nil
@@ -442,11 +448,11 @@ func ObterComprasPdf(idFatura *uuid.UUID, idCartao *uuid.UUID) []byte {
 // ObterComprasTotal é responsável por realizar a requisição que obtém o valor total das compras
 func ObterComprasTotal(stateCompra *UserStateCompras) (res *ResObterComprasTotal) {
 	var (
-		resp *http.Response
-		err  error
+		resp            *http.Response
+		err             error
+		ambiente        = utils.ValidarAmbiente()
+		urlObterCompras = ambiente + BaseURLCompras
 	)
-
-	var urlObterCompras = BaseURLCompras
 
 	urlObterCompras += fmt.Sprintf("/total?data_especifica=%s", *stateCompra.ObterTotalCompras.DataEspecifica)
 

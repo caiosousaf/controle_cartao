@@ -1,8 +1,6 @@
 package faturas
 
 import (
-	"bot_controle_cartao/utils"
-	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
@@ -40,11 +38,9 @@ type ReqAtualizarStatus struct {
 	Status *string `json:"status"`
 }
 
-var url = utils.ValidarSistema()
-
 var (
-	BaseURLFaturas = fmt.Sprintf("%s/cadastros/cartao/", url)
-	BaseURLFatura  = fmt.Sprintf("%s/cadastros/fatura/", url)
+	BaseURLFaturas = "/cadastros/cartao/"
+	BaseURLFatura  = "/cadastros/fatura/"
 )
 
 // Res modela uma resposta para listagem e busca de faturas de um cartão

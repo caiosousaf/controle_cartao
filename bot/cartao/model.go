@@ -1,8 +1,6 @@
 package cartao
 
 import (
-	"bot_controle_cartao/utils"
-	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
@@ -20,11 +18,9 @@ type NovoCartao struct {
 	Nome string
 }
 
-var url = utils.ValidarSistema()
-
 var (
-	BaseURLCartoes = fmt.Sprintf("%s/cadastros/cartoes", url)
-	BaseURLCartao  = fmt.Sprintf("%s/cadastros/cartao", url)
+	BaseURLCartoes = "/cadastros/cartoes"
+	BaseURLCartao  = "/cadastros/cartao"
 )
 
 // Res modela uma resposta para listagem e busca de cartões

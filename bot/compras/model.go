@@ -1,17 +1,13 @@
 package compras
 
 import (
-	"bot_controle_cartao/utils"
-	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
 
-var url = utils.ValidarSistema()
-
 var (
-	BaseURLCompras    = fmt.Sprintf("%s/cadastros/compras", url)
-	BaseURLComprasPdf = fmt.Sprintf("%s/cadastros/compras/pdf", url)
+	BaseURLCompras    = "/cadastros/compras"
+	BaseURLComprasPdf = "/cadastros/compras/pdf"
 )
 
 // UserStateCompras Struct para armazenar o estado da conversa do usuário para ações de compras

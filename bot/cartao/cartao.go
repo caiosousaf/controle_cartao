@@ -1,6 +1,7 @@
 package cartao
 
 import (
+	"bot_controle_cartao/utils"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -148,7 +149,9 @@ func EnviarOpcoesAno(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbotapi
 
 // ListarCartoes é responsável por listar os cartões cadastrados
 func ListarCartoes(url string) (cartoes ResPag) {
-	resp, err := http.Get(url)
+	var ambiente = utils.ValidarAmbiente()
+
+	resp, err := http.Get(ambiente + url)
 	if err != nil {
 		fmt.Println("Erro ao fazer a requisição:", err)
 		return
@@ -175,7 +178,9 @@ func ListarCartoes(url string) (cartoes ResPag) {
 
 // BuscarCartao é responsável por buscar o cartão de acordo com o id
 func BuscarCartao(url string, id string) (cartao Res) {
-	resp, err := http.Get(url + fmt.Sprintf("/%s", id))
+	var ambiente = utils.ValidarAmbiente()
+
+	resp, err := http.Get(ambiente + url + fmt.Sprintf("/%s", id))
 	if err != nil {
 		fmt.Println("Erro ao fazer a requisição:", err)
 		return

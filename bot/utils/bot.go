@@ -18,11 +18,11 @@ func CancelarOperacao(bot *tgbotapi.BotAPI, mensagem, currentStep *string, chatI
 	return false
 }
 
-// ValidarSistema é uma função que valida se a aplicação está em produção
-func ValidarSistema() string {
+// ValidarAmbiente é uma função que valida se a aplicação está em produção
+func ValidarAmbiente() string {
 	sistemaProducao := os.Getenv("PROD")
 
-	if sistemaProducao != "" {
+	if sistemaProducao == "" {
 		sistemaLocal := os.Getenv("LOCAL")
 
 		return sistemaLocal

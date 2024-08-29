@@ -1,6 +1,7 @@
 package categorias
 
 import (
+	"bot_controle_cartao/utils"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +10,9 @@ import (
 
 // ListarCategorias é responsável por realizar a requisição para listar as categorias
 func ListarCategorias(url string) (categorias ResCategoriasPag) {
-	resp, err := http.Get(url)
+	var ambiente = utils.ValidarAmbiente()
+
+	resp, err := http.Get(ambiente + url)
 	if err != nil {
 		fmt.Println("Erro ao fazer a requisição:", err)
 		return
