@@ -1,11 +1,13 @@
 package faturas
 
 import (
+	"bot_controle_cartao/utils"
+	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
 
-// Struct para armazenar o estado da conversa do usuário
+// UserState Struct para armazenar o estado da conversa do usuário
 type UserState struct {
 	ChatID          int64
 	CurrentStep     string
@@ -13,7 +15,7 @@ type UserState struct {
 	NewInvoiceData  NewInvoice
 }
 
-// Struct para armazenar os dados de uma nova fatura
+// NewInvoice Struct para armazenar os dados de uma nova fatura
 type NewInvoice struct {
 	Title   string
 	Amount  float64
@@ -38,9 +40,11 @@ type ReqAtualizarStatus struct {
 	Status *string `json:"status"`
 }
 
-const (
-	BaseURLFaturas = "http://localhost:8080/cadastros/cartao/"
-	BaseURLFatura  = "http://localhost:8080/cadastros/fatura/"
+var url = utils.ValidarSistema()
+
+var (
+	BaseURLFaturas = fmt.Sprintf("%s/cadastros/cartao/", url)
+	BaseURLFatura  = fmt.Sprintf("%s/cadastros/fatura/", url)
 )
 
 // Res modela uma resposta para listagem e busca de faturas de um cartão
@@ -54,7 +58,7 @@ type Res struct {
 	DataVencimento *string    `json:"data_vencimento" apelido:"data_vencimento"`
 }
 
-// ResPag modela uma lista de respostas com suporte para paginação de faturas de cartão na listagem
+// ResPagFaturas modela uma lista de respostas com suporte para paginação de faturas de cartão na listagem
 type ResPagFaturas struct {
 	Dados []Res  `json:"dados,omitempty"`
 	Prox  *bool  `json:"prox,omitempty"`

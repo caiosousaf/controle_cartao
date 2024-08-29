@@ -1,13 +1,15 @@
 package categorias
 
 import (
+	"bot_controle_cartao/utils"
+	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
 
-const (
-	BaseURLCategoria = "http://localhost:8080/cadastros/categorias"
-)
+var url = utils.ValidarSistema()
+
+var BaseURLCategoria = fmt.Sprintf("%s/cadastros/categorias", url)
 
 // ResCategorias modela uma resposta para listagem e busca de categorias
 type ResCategorias struct {
