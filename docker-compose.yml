@@ -4,7 +4,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.api
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
