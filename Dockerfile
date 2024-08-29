@@ -16,9 +16,6 @@ RUN go build -o server
 # Expor a porta em que a API será executada
 EXPOSE 8080
 
-# Copiar o arquivo de variáveis de ambiente .env para o contêiner
-COPY .env /app/.env
-
 # Comando para rodar a API
 CMD ["./server"]
 

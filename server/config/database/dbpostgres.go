@@ -3,18 +3,10 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/joho/godotenv"
-	"log"
 	"os"
 
 	_ "github.com/lib/pq"
 )
-
-func init() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatalf("Erro ao carregar arquivo .env: %v", err)
-	}
-}
 
 func Conectar() (*sql.DB, error) {
 	host := os.Getenv("DB_HOST")
