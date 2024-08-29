@@ -18,8 +18,3 @@ EXPOSE 8080
 
 # Comando para rodar a API
 CMD ["./server"]
-
-# Adicionar a etapa de verificação dos arquivos copiados e do build
-RUN ls -al /app
-RUN echo "Verificando a construção do binário"
-RUN file /app/server
