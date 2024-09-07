@@ -10,16 +10,10 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"log"
+	"net/http"
 	"os"
 )
-
-func init() {
-	if err := godotenv.Load("server/.env"); err != nil {
-		log.Fatalf("Erro ao carregar arquivo .env: %v", err)
-	}
-}
 
 func main() {
 
@@ -70,6 +64,17 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	go func() {
+		log.Println("Starting HTTP server on port 8079...")
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Bot is running"))
+		})
+		if err := http.ListenAndServe(":8079", nil); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	// Loop pelas atualizações recebidas do bot
 	for update := range updates {
@@ -191,4 +196,5 @@ func main() {
 			}
 		}
 	}
+
 }

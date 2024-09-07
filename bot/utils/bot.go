@@ -2,6 +2,7 @@ package utils
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"os"
 	"strings"
 )
 
@@ -15,4 +16,17 @@ func CancelarOperacao(bot *tgbotapi.BotAPI, mensagem, currentStep *string, chatI
 	}
 
 	return false
+}
+
+// ValidarAmbiente é uma função que valida se a aplicação está em produção
+func ValidarAmbiente() string {
+	sistemaProducao := os.Getenv("PROD")
+
+	if sistemaProducao == "" {
+		sistemaLocal := os.Getenv("LOCAL")
+
+		return sistemaLocal
+	}
+
+	return sistemaProducao
 }

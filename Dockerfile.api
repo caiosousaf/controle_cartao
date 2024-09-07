@@ -1,0 +1,20 @@
+# Usar uma imagem base do Golang
+FROM golang:1.18-alpine
+
+# Definir o diretório de trabalho dentro do contêiner
+WORKDIR /app
+
+# Copiar os arquivos da API para o contêiner
+COPY ./server /app
+
+# Instalar as dependências e compilar a aplicação
+RUN go mod tidy
+RUN go build -o server
+
+# Expor a porta em que a API será executada
+EXPOSE 8080
+
+# Comando para rodar a API
+CMD ["./server"]
+
+COPY .env /app/.env

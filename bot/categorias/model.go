@@ -5,9 +5,7 @@ import (
 	"time"
 )
 
-const (
-	BaseURLCategoria = "http://localhost:8080/cadastros/categorias"
-)
+var BaseURLCategoria = "/cadastros/categorias"
 
 // ResCategorias modela uma resposta para listagem e busca de categorias
 type ResCategorias struct {

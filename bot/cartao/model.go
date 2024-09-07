@@ -18,9 +18,9 @@ type NovoCartao struct {
 	Nome string
 }
 
-const (
-	BaseURLCartoes = "http://localhost:8080/cadastros/cartoes"
-	BaseURLCartao  = "http://localhost:8080/cadastros/cartao"
+var (
+	BaseURLCartoes = "/cadastros/cartoes"
+	BaseURLCartao  = "/cadastros/cartao"
 )
 
 // Res modela uma resposta para listagem e busca de cartões

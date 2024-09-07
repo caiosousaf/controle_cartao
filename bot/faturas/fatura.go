@@ -387,7 +387,9 @@ func EnviaOpcoesNovoStatusFatura(bot *tgbotapi.BotAPI, chatID int64, callbackQue
 }
 
 func ListarFaturas(url string) (res ResPagFaturas) {
-	resp, err := http.Get(url)
+	var ambiente = utils.ValidarAmbiente()
+
+	resp, err := http.Get(ambiente + url)
 	if err != nil {
 		fmt.Println("Erro ao fazer a requisição:", err)
 		return
@@ -414,7 +416,9 @@ func ListarFaturas(url string) (res ResPagFaturas) {
 
 // BuscarFatura é responsável por realizar uma requisição para obter os dados de uma fatura
 func BuscarFatura(id *string) (res Res) {
-	resp, err := http.Get(BaseURLFatura + *id)
+	var ambiente = utils.ValidarAmbiente()
+
+	resp, err := http.Get(ambiente + BaseURLFatura + *id)
 	if err != nil {
 		fmt.Println("Erro ao fazer a requisição:", err)
 		return
@@ -436,12 +440,12 @@ func BuscarFatura(id *string) (res Res) {
 	return
 }
 
-type Sla struct {
+type Error struct {
 	Err *string `json:"error"`
 }
 
 // AtualizarStatusPagamentoFatura é responsável por realizar a requisição para atualização do status de uma fatura
-func AtualizarStatusPagamentoFatura(faturaID *uuid.UUID, dadosStatus *ReqAtualizarStatus) (slaa Sla) {
+func AtualizarStatusPagamentoFatura(faturaID *uuid.UUID, dadosStatus *ReqAtualizarStatus) (estruturaErro Error) {
 	dados := ReqAtualizarStatus{
 		Status: dadosStatus.Status,
 	}
@@ -452,7 +456,9 @@ func AtualizarStatusPagamentoFatura(faturaID *uuid.UUID, dadosStatus *ReqAtualiz
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodPut, BaseURLFatura+fmt.Sprintf("%s/status", faturaID.String()), bytes.NewBuffer(dadosJSON))
+	var ambiente = utils.ValidarAmbiente()
+
+	req, err := http.NewRequest(http.MethodPut, ambiente+BaseURLFatura+fmt.Sprintf("%s/status", faturaID.String()), bytes.NewBuffer(dadosJSON))
 	if err != nil {
 		fmt.Println("Erro ao criar a requisição PUT:", err)
 		return
@@ -481,7 +487,7 @@ func AtualizarStatusPagamentoFatura(faturaID *uuid.UUID, dadosStatus *ReqAtualiz
 	// Imprime a resposta da API
 	fmt.Println("Resposta da API:", string(body))
 
-	if err := json.Unmarshal(body, &slaa); err != nil {
+	if err := json.Unmarshal(body, &estruturaErro); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}

@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-const (
-	BaseURLCompras    = "http://localhost:8080/cadastros/compras"
-	BaseURLComprasPdf = "http://localhost:8080/cadastros/compras/pdf"
+var (
+	BaseURLCompras    = "/cadastros/compras"
+	BaseURLComprasPdf = "/cadastros/compras/pdf"
 )
 
 // UserStateCompras Struct para armazenar o estado da conversa do usuário para ações de compras
