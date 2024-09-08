@@ -4,6 +4,7 @@ import (
 	"controle_cartao/application/cadastros/compras"
 	"controle_cartao/middlewares"
 	"controle_cartao/utils"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -68,6 +69,8 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 
 	pdf, err := compras.PdfComprasFaturaCartao(&params, usuarioID)
 	if err != nil {
+		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return

@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -268,6 +269,8 @@ func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf
 	valorTotalFaturaString := strconv.FormatFloat(valorTotalFatura, 'f', -1, 64)
 
 	pdf, err = gerarPdf()
+
+	log.Println(pdf)
 
 	tabelaFaturasPdf(pdf, listaCompras, &valorTotalFaturaString, tamanhoCel, alturaCel)
 
