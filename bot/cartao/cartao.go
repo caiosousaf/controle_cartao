@@ -2,6 +2,7 @@ package cartao
 
 import (
 	"bot_controle_cartao/utils"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -13,28 +14,111 @@ import (
 )
 
 // ProcessoAcoesCartoes é responsável por coordenar as ações relacionadas a cartões
-func ProcessoAcoesCartoes(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCartao) {
+func ProcessoAcoesCartoes(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState map[int64]*UserStateCartao, userTokens map[int64]string) {
+	if userState, ok := userCartaoState[message.Chat.ID]; ok {
+		if userState.CurrentStepBool {
+			continuaCriacaoCartao(bot, message, userState, userTokens)
+		}
+	}
 
 	switch message.Text {
 	case "Cartões":
 		gerarOpcoesAcoesCartao(bot, message)
 	case "Extrato":
-		cartoes := ListarCartoes(BaseURLCartoes)
+		cartoes, err := ListarCartoes(BaseURLCartoes, userTokens, message.Chat.ID)
+		if err != nil {
+			msg := tgbotapi.NewMessage(message.Chat.ID, err.Error())
+			utils.EnviaMensagem(bot, msg)
+			return
+		}
 
 		gerarOpcoesCartoesDisponiveis(bot, message.Chat.ID, &cartoes, userCartaoState)
+	case "Cadastrar Cartão":
+		inicioCriacaoCartao(bot, message.Chat.ID, userCartaoState)
+		userCartaoState[message.Chat.ID].CurrentStepBool = true
 	}
+}
+
+// inicioCriacaoCartao é responsável por iniciar o processo de criação de um cartão
+func inicioCriacaoCartao(bot *tgbotapi.BotAPI, chatID int64, userCartaoState map[int64]*UserStateCartao) {
+	userCartaoState[chatID] = &UserStateCartao{
+		ChatID:      chatID,
+		CurrentStep: "cadastro_cartao",
+	}
+
+	msg := tgbotapi.NewMessage(chatID, "Por favor, insira o nome do cartão")
+	utils.EnviaMensagem(bot, msg)
+}
+
+// continuaCriacaoCartao é responsável por continuar a criação do cartão
+func continuaCriacaoCartao(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCartao, userTokens map[int64]string) {
+	switch userCartaoState.CurrentStep {
+	case "cadastro_cartao":
+		userCartaoState.NovoCartaoData.Nome = message.Text
+		userCartaoState.CurrentStep = ""
+		userCartaoState.CurrentStepBool = false
+
+		err := CadastrarCartao(userCartaoState, userTokens, message.Chat.ID)
+		if err != nil {
+			msg := tgbotapi.NewMessage(message.Chat.ID, err.Error())
+			utils.EnviaMensagem(bot, msg)
+			return
+		}
+
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Cartão cadastrado com sucesso!")
+		utils.EnviaMensagem(bot, msg)
+	}
+}
+
+// CadastrarCartao é responsável por cadastrar um novo cartão
+func CadastrarCartao(cartao *UserStateCartao, userTokens map[int64]string, chatID int64) (err error) {
+	var ambiente = utils.ValidarAmbiente()
+
+	token, ok := userTokens[chatID]
+	if !ok {
+		return fmt.Errorf("usuário não está autenticado")
+	}
+
+	// Montar os dados a serem enviados no corpo do POST
+	dados := NovoCartao{
+		Nome: cartao.NovoCartaoData.Nome,
+	}
+
+	// Codificar os dados em formato JSON
+	dadosJSON, err := json.Marshal(dados)
+	if err != nil {
+		fmt.Println("Erro ao codificar os dados JSON:", err)
+		return
+	}
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s"+BaseURLCartoes, ambiente), bytes.NewBuffer(dadosJSON))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("Erro ao realizar cadastro do cartão!")
+	}
+
+	return
 }
 
 // gerarOpcoesAcoesCartao é responsável por gerar os botões para seleção das ações de cartões para o usuário
 func gerarOpcoesAcoesCartao(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 	buttonOpcao1 := tgbotapi.NewKeyboardButton("Extrato")
-	buttonOpcao2 := tgbotapi.NewKeyboardButton("cadastrar_cartao")
-	buttonOpcao3 := tgbotapi.NewKeyboardButton("Opção 3")
-	buttonOpcao4 := tgbotapi.NewKeyboardButton("Opção 4")
+	buttonOpcao2 := tgbotapi.NewKeyboardButton("Cadastrar Cartão")
 
 	keyboard := tgbotapi.NewReplyKeyboard(
 		[]tgbotapi.KeyboardButton{buttonOpcao1, buttonOpcao2},
-		[]tgbotapi.KeyboardButton{buttonOpcao3, buttonOpcao4},
 	)
 
 	msg := tgbotapi.NewMessage(message.Chat.ID, "Selecione uma opção:")
@@ -47,7 +131,7 @@ func gerarOpcoesAcoesCartao(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 }
 
 // gerarOpcoesCartoesDisponiveis Função para enviar botões inline de seleção de cartões
-func gerarOpcoesCartoesDisponiveis(bot *tgbotapi.BotAPI, chatID int64, cartao *ResPag, userCartaoState *UserStateCartao) {
+func gerarOpcoesCartoesDisponiveis(bot *tgbotapi.BotAPI, chatID int64, cartao *ResPag, userCartaoState map[int64]*UserStateCartao) {
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
 
@@ -78,11 +162,14 @@ func gerarOpcoesCartoesDisponiveis(bot *tgbotapi.BotAPI, chatID int64, cartao *R
 
 	step := "selecionar_ano"
 
-	userCartaoState.CurrentStep = step
+	userCartaoState[chatID] = &UserStateCartao{
+		ChatID:      chatID,
+		CurrentStep: step,
+	}
 }
 
 // EnviarOpcoesAno envia as opções para que o usuário selecione o ano que será usado quando for gerado o extrato
-func EnviarOpcoesAno(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbotapi.CallbackQuery, userCartaoState *UserStateCartao) {
+func EnviarOpcoesAno(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbotapi.CallbackQuery, userCartaoState map[int64]*UserStateCartao) {
 	edit := tgbotapi.NewEditMessageText(callbackQuery.Message.Chat.ID, callbackQuery.Message.MessageID, fmt.Sprintf("Opção Selecionada: %s", callbackQuery.Data))
 	edit.ReplyMarkup = nil
 
@@ -144,31 +231,43 @@ func EnviarOpcoesAno(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbotapi
 
 	step := "ano_selecionado"
 
-	userCartaoState.CurrentStep = step
+	userCartaoState[chatID].CurrentStep = step
 }
 
 // ListarCartoes é responsável por listar os cartões cadastrados
-func ListarCartoes(url string) (cartoes ResPag) {
+func ListarCartoes(url string, userTokens map[int64]string, chatID int64) (cartoes ResPag, err error) {
 	var ambiente = utils.ValidarAmbiente()
 
-	resp, err := http.Get(ambiente + url)
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return
+	token, ok := userTokens[chatID]
+	if !ok {
+		return cartoes, fmt.Errorf("usuário não está autenticado")
 	}
+
+	req, err := http.NewRequest(http.MethodGet, ambiente+url, nil)
+	if err != nil {
+		return cartoes, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	// Lê o corpo da resposta
+	if resp.StatusCode == http.StatusUnauthorized {
+		return cartoes, fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusOK {
+		return cartoes, fmt.Errorf("%s", resp.Status)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return
 	}
 
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	if err := json.Unmarshal(body, &cartoes); err != nil {
+	if err = json.Unmarshal(body, &cartoes); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}
@@ -177,27 +276,39 @@ func ListarCartoes(url string) (cartoes ResPag) {
 }
 
 // BuscarCartao é responsável por buscar o cartão de acordo com o id
-func BuscarCartao(url string, id string) (cartao Res) {
+func BuscarCartao(url string, id string, userTokens map[int64]string, chatID int64) (cartao Res, err error) {
 	var ambiente = utils.ValidarAmbiente()
 
-	resp, err := http.Get(ambiente + url + fmt.Sprintf("/%s", id))
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return
+	token, ok := userTokens[chatID]
+	if !ok {
+		return cartao, fmt.Errorf("usuário não está autenticado")
 	}
+
+	req, err := http.NewRequest(http.MethodGet, ambiente+url+fmt.Sprintf("/%s", id), nil)
+	if err != nil {
+		return cartao, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	// Lê o corpo da resposta
+	if resp.StatusCode == http.StatusUnauthorized {
+		return cartao, fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusOK {
+		return cartao, fmt.Errorf("%s", resp.Status)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return
 	}
 
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	if err := json.Unmarshal(body, &cartao); err != nil {
+	if err = json.Unmarshal(body, &cartao); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}
