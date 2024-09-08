@@ -1,13 +1,15 @@
 package middlewares
 
 import (
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+	"os"
 	"strconv"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
-var jwtKey = []byte("jwt_controle_cartao")
+var jwtKey = []byte(os.Getenv("JWT_KEY"))
 
 // GerarJWT é responstável por gerar o token JWT
 func GerarJWT(nome string, idUsuario *uuid.UUID) (string, error) {
