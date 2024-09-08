@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -280,24 +279,6 @@ func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf
 
 func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 	pdf = gofpdf.New("P", "mm", "A4", "")
-
-	fontPaths := []string{
-		"/app/font/CaviarDreams.ttf",
-		"/app/font/CaviarDreams_Bold.ttf",
-		"/app/font/CaviarDreams_Italic.ttf",
-		"/app/font/CaviarDreams_BoldItalic.ttf",
-	}
-
-	for _, path := range fontPaths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			log.Printf("Font file not found: %s", path)
-		}
-	}
-
-	pdf.AddUTF8Font("Caviar", "", "/app/font/CaviarDreams.ttf")
-	pdf.AddUTF8Font("Caviar Bold", "B", "/app/font/CaviarDreams_Bold.ttf")
-	pdf.AddUTF8Font("Caviar Italic", "I", "/app/font/CaviarDreams_Italic.ttf")
-	pdf.AddUTF8Font("Caviar BoldItalic", "BI", "/app/font/CaviarDreams_BoldItalic.ttf")
 
 	// Configura a fonte
 	pdf.SetFont("Caviar", "", 5)
