@@ -39,7 +39,8 @@ func (pg *DBCartao) ListarCartoes(p *utils.Parametros) (res *model.CartaoPag, er
 	}
 
 	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select(campos...).
-		From("public.t_cartao TC")
+		From("public.t_cartao TC").
+		Where("TC.data_desativacao IS NULL")
 
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"nome_exato": utils.CriarFiltros("lower(TC.nome) = lower(?)", utils.FlagFiltroEq),

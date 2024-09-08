@@ -32,6 +32,7 @@ func (pg *DBUsuario) BuscarUsuario(email *string) (res *model.Usuario, err error
 	if err = sq.StatementBuilder.RunWith(pg.DB).Select("id", "nome", "email", "senha", "data_criacao", "data_desativacao").
 		From("public.t_usuarios").
 		Where("email = $1", email).
+		Where("data_desativacao ISNULL").
 		Scan(&res.ID, &res.Nome, &res.Email, &res.Senha, &res.DataCriacao, &res.DataDesativacao); err != nil {
 		return nil, err
 	}

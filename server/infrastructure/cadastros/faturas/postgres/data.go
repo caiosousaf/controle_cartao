@@ -16,7 +16,7 @@ type DBFatura struct {
 }
 
 // ListarFaturasCartao lista de forma paginada os dados das faturas de um cartão no banco de dados
-func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res *model.FaturaPag, err error) {
+func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id, usuarioID *uuid.UUID) (res *model.FaturaPag, err error) {
 	var t model.Fatura
 
 	res = new(model.FaturaPag)
@@ -32,6 +32,7 @@ func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res
 		Where(sq.Eq{
 			"TFC.fatura_cartao_id": id,
 			"TC.data_desativacao":  nil,
+			"TC.usuario_id":        usuarioID,
 		}).OrderBy("TFC.data_criacao")
 
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
@@ -69,14 +70,15 @@ func (pg *DBFatura) BuscarFaturaCartao(idCartao, idFatura *uuid.UUID) (res *mode
 }
 
 // BuscarFatura busca os dados de uma fatura de um cartão no banco de dados dado os ID's fornecidos
-func (pg *DBFatura) BuscarFatura(idFatura *uuid.UUID) (res *model.Fatura, err error) {
+func (pg *DBFatura) BuscarFatura(idFatura, usuarioID *uuid.UUID) (res *model.Fatura, err error) {
 	res = new(model.Fatura)
 	if err = sq.StatementBuilder.RunWith(pg.DB).Select(`TFC.id, TFC.nome, TFC.fatura_cartao_id,
 				TC.nome, TFC.status, TFC.data_criacao, TFC.data_vencimento`).
 		From("public.t_fatura_cartao TFC").
 		Join("public.t_cartao TC on TC.id = TFC.fatura_cartao_id").
 		Where(sq.Eq{
-			"TFC.id": idFatura,
+			"TFC.id":        idFatura,
+			"TC.usuario_id": usuarioID,
 		}).PlaceholderFormat(sq.Dollar).
 		Scan(&res.ID, &res.Nome, &res.FaturaCartaoID, &res.NomeCartao, &res.Status, &res.DataCriacao, &res.DataVencimento); err != nil {
 		return res, err
@@ -128,12 +130,15 @@ func (pg *DBFatura) ObterProximasFaturas(parcela_atual, qtd_parcelas *int64, idF
 }
 
 // VerificarFaturaCartao verifica se existe fatura de um cartão para a data escolhida
-func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao *uuid.UUID) (faturaID *uuid.UUID, err error) {
+func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao, usuarioID *uuid.UUID) (faturaID *uuid.UUID, err error) {
 	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select("TFC.id").
 		From("public.t_fatura_cartao TFC").
 		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id").
 		Where(fmt.Sprintf("EXTRACT(MONTH FROM TFC.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)", *data)).
-		Where(sq.Eq{"TC.id": idCartao}).
+		Where(sq.Eq{
+			"TC.id":         idCartao,
+			"TC.usuario_id": usuarioID,
+		}).
 		PlaceholderFormat(sq.Dollar)
 
 	if err = consultaSql.QueryRow().Scan(&faturaID); err != nil {
@@ -207,4 +212,18 @@ func (pg *DBFatura) AtualizarStatusFatura(req *model.Fatura, idFatura *uuid.UUID
 	}
 
 	return
+}
+
+// CartaoPertenceUsuario verifica se o cartão informado pertence ao usuário
+func (pg *DBFatura) CartaoPertenceUsuario(idCartao, usuarioID *uuid.UUID) bool {
+	var valor int64
+	_ = sq.StatementBuilder.RunWith(pg.DB).Select(`1`).
+		From("public.t_cartao TC").
+		Where(sq.Eq{
+			"TC.id":         idCartao,
+			"TC.usuario_id": usuarioID,
+		}).PlaceholderFormat(sq.Dollar).
+		Scan(&valor)
+
+	return valor > 0
 }

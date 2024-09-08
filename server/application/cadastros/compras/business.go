@@ -8,6 +8,7 @@ import (
 	infraFaturas "controle_cartao/infrastructure/cadastros/faturas"
 	"controle_cartao/utils"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -17,7 +18,7 @@ import (
 )
 
 // CadastrarCompra contém a regra de negócio para cadastrar uma nova compra
-func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err error) {
+func CadastrarCompra(req *Req, idFatura, usuarioID *uuid.UUID) (idCompra *uuid.UUID, err error) {
 	const (
 		msgErrPadrao                  = "Erro ao cadastrar nova compra"
 		msgErrProxFaturas             = "Erro ao obter as próximas faturas"
@@ -48,9 +49,13 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 		return idCompra, utils.Wrap(err, msgErrPadrao)
 	}
 
-	buscaFatura, err := repoFatura.BuscarFatura(idFatura)
+	buscaFatura, err := repoFatura.BuscarFatura(idFatura, usuarioID)
 	if err != nil {
 		return idCompra, utils.Wrap(err, msgErrBuscarFatura)
+	}
+
+	if ok := repoFatura.CartaoPertenceUsuario(buscaFatura.FaturaCartaoID, usuarioID); ok != true {
+		return idCompra, utils.NewErr("Cartão selecionado não pertence ao usuário")
 	}
 
 	dataCompraData, err := time.Parse(formatoDataEsperado, *reqInfra.DataCompra)
@@ -73,8 +78,8 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 	}
 
 	for i := range datas {
-		faturaID, err := repoFatura.VerificarFaturaCartao(&datas[i], idCartao)
-		if err == sql.ErrNoRows && faturaID == nil {
+		faturaID, err := repoFatura.VerificarFaturaCartao(&datas[i], idCartao, usuarioID)
+		if errors.Is(err, sql.ErrNoRows) && faturaID == nil {
 			reqInfraFatura.Nome = &meses[i]
 			reqInfraFatura.DataVencimento = &datas[i]
 			reqInfraFatura.FaturaCartaoID = idCartao
@@ -107,7 +112,7 @@ func CadastrarCompra(req *Req, idFatura *uuid.UUID) (idCompra *uuid.UUID, err er
 }
 
 // ListarCompras contém a regra de negócio para listar as compras
-func ListarCompras(params *utils.Parametros) (res *ResComprasPag, err error) {
+func ListarCompras(params *utils.Parametros, usuarioID *uuid.UUID) (res *ResComprasPag, err error) {
 	const msgErrPadrao = "Erro ao listar compras"
 
 	res = new(ResComprasPag)
@@ -120,7 +125,7 @@ func ListarCompras(params *utils.Parametros) (res *ResComprasPag, err error) {
 
 	repo := compras.NovoRepo(db)
 
-	listaCompras, err := repo.ListarCompras(params)
+	listaCompras, err := repo.ListarCompras(params, usuarioID)
 	if err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
@@ -138,7 +143,7 @@ func ListarCompras(params *utils.Parametros) (res *ResComprasPag, err error) {
 }
 
 // ObterTotalComprasValor contém a regra de negócio para obter o total das compras
-func ObterTotalComprasValor(params *utils.Parametros) (res *ResTotalComprasValor, err error) {
+func ObterTotalComprasValor(params *utils.Parametros, usuarioID *uuid.UUID) (res *ResTotalComprasValor, err error) {
 	const msgErrPadrao = "Erro ao obter o total das compras"
 
 	res = new(ResTotalComprasValor)
@@ -156,7 +161,7 @@ func ObterTotalComprasValor(params *utils.Parametros) (res *ResTotalComprasValor
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
 
-	totalCompras, err := repo.ObterTotalComprasValor(params)
+	totalCompras, err := repo.ObterTotalComprasValor(params, usuarioID)
 	if err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
@@ -168,7 +173,7 @@ func ObterTotalComprasValor(params *utils.Parametros) (res *ResTotalComprasValor
 	return
 }
 
-func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err error) {
+func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf *gofpdf.Fpdf, err error) {
 	const (
 		tamanhoCel   = float64(18)
 		alturaCel    = float64(5)
@@ -202,7 +207,7 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 			return pdf, utils.Wrap(erro, msgErrPadrao)
 		}
 
-		listaFaturas, erro := repoFatura.ListarFaturasCartao(paramsFatura, &cartaoUuid)
+		listaFaturas, erro := repoFatura.ListarFaturasCartao(paramsFatura, &cartaoUuid, usuarioID)
 		if erro != nil {
 			return pdf, utils.Wrap(erro, msgErrPadrao)
 		}
@@ -217,7 +222,7 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 
 		for j := range listaFaturas.Dados {
 			params.AdicionarFiltro("fatura_id", listaFaturas.Dados[j].ID.String())
-			valor, err := repo.ObterTotalComprasValor(params)
+			valor, err := repo.ObterTotalComprasValor(params, usuarioID)
 			if err != nil {
 				return pdf, utils.Wrap(err, msgErrPadrao)
 			}
@@ -238,7 +243,7 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 		for i := range listaFaturas.Dados {
 			params.AdicionarFiltro("fatura_id", listaFaturas.Dados[i].ID.String())
 
-			listaCompras, err := repo.ListarCompras(params)
+			listaCompras, err := repo.ListarCompras(params, usuarioID)
 			if err != nil {
 				return pdf, utils.Wrap(err, msgErrPadrao)
 			}
@@ -251,7 +256,7 @@ func PdfComprasFaturaCartao(params *utils.Parametros) (pdf *gofpdf.Fpdf, err err
 		return
 	}
 
-	listaCompras, err := repo.ListarCompras(params)
+	listaCompras, err := repo.ListarCompras(params, usuarioID)
 	if err != nil {
 		return pdf, utils.Wrap(err, msgErrPadrao)
 	}

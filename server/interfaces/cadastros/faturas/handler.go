@@ -2,9 +2,11 @@ package faturas
 
 import (
 	"controle_cartao/application/cadastros/faturas"
+	"controle_cartao/middlewares"
 	"controle_cartao/utils"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // listarFaturasCartao godoc
@@ -21,7 +23,9 @@ func listarFaturasCartao(c *gin.Context) {
 		return
 	}
 
-	res, err := faturas.ListarFaturasCartao(&p, id)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := faturas.ListarFaturasCartao(&p, id, usuarioID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
@@ -40,7 +44,9 @@ func buscarFatura(c *gin.Context) {
 		return
 	}
 
-	res, err := faturas.BuscarFatura(idFatura)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := faturas.BuscarFatura(idFatura, usuarioID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
@@ -66,7 +72,9 @@ func cadastrarFatura(c *gin.Context) {
 		return
 	}
 
-	id, err := faturas.CadastrarFatura(&req, idCartao)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	id, err := faturas.CadastrarFatura(&req, idCartao, usuarioID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
@@ -99,7 +107,9 @@ func atualizarFatura(c *gin.Context) {
 		return
 	}
 
-	if err := faturas.AtualizarFatura(&req, idCartao, idFatura); err != nil {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := faturas.AtualizarFatura(&req, idCartao, idFatura, usuarioID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
@@ -124,7 +134,9 @@ func atualizarStatusFatura(c *gin.Context) {
 		return
 	}
 
-	if err := faturas.AtualizarStatusFatura(&req, idFatura); err != nil {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := faturas.AtualizarStatusFatura(&req, idFatura, usuarioID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
