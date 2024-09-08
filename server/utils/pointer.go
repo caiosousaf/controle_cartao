@@ -1,9 +1,9 @@
 package utils
 
-func GetInt64Pointer(i int64) *int64 {
-	return &i
-}
-
 func GetStringPointer(s string) *string {
 	return &s
+}
+
+func GetPointer[T any](ptr *T) *T {
+	return ptr
 }
