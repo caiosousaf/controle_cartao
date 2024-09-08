@@ -280,10 +280,10 @@ func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf
 func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 	pdf = gofpdf.New("P", "mm", "A4", "")
 
-	pdf.AddUTF8Font("Caviar", "", "server/font/CaviarDreams.ttf")
-	pdf.AddUTF8Font("Caviar Bold", "B", "server/font/CaviarDreams_Bold.ttf")
-	pdf.AddUTF8Font("Caviar Italic", "I", "server/font/CaviarDreams_Italic.ttf")
-	pdf.AddUTF8Font("Caviar BoldItalic", "BI", "server/font/CaviarDreams_BoldItalic.ttf")
+	pdf.AddUTF8Font("Caviar", "", "app/font/CaviarDreams.ttf")
+	pdf.AddUTF8Font("Caviar Bold", "B", "app/font/CaviarDreams_Bold.ttf")
+	pdf.AddUTF8Font("Caviar Italic", "I", "app/font/CaviarDreams_Italic.ttf")
+	pdf.AddUTF8Font("Caviar BoldItalic", "BI", "app/font/CaviarDreams_BoldItalic.ttf")
 
 	// Configura a fonte
 	pdf.SetFont("Caviar", "", 5)
@@ -312,9 +312,6 @@ func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, valorTot
 
 	pdf.SetFillColor(68, 68, 68)
 	pdf.SetTextColor(255, 255, 255)
-	// Cor das linhas
-	//pdf.SetDrawColor(128, 0, 0)
-	//pdf.SetLineWidth(.3)
 
 	pdf.SetX(left)
 
