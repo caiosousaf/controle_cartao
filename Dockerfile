@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Copiar os arquivos da API para o contêiner
 COPY ./server /app
-RUN ls -la
 
 # Instalar as dependências e compilar a aplicação
 RUN go build -o server

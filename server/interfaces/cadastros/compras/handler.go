@@ -4,9 +4,9 @@ import (
 	"controle_cartao/application/cadastros/compras"
 	"controle_cartao/middlewares"
 	"controle_cartao/utils"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,7 +69,28 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 
 	pdf, err := compras.PdfComprasFaturaCartao(&params, usuarioID)
 	if err != nil {
-		fmt.Println(err)
+		fontPaths := []string{
+			"/app/font/CaviarDreams.ttf",
+			"/app/font/CaviarDreams_Bold.ttf",
+			"/app/font/CaviarDreams.ttf",
+			"/app/font/CaviarDreams_Bold.ttf",
+			"app/font/CaviarDreams.ttf",
+			"app/font/CaviarDreams_Bold.ttf",
+			"/server/font/CaviarDreams.ttf",
+			"/server/font/CaviarDreams_Bold.ttf",
+			"server/font/CaviarDreams.ttf",
+			"server/font/CaviarDreams_Bold.ttf",
+			"font/CaviarDreams.ttf",
+			"font/CaviarDreams_Bold.ttf",
+			"/font/CaviarDreams.ttf",
+			"/font/CaviarDreams_Bold.ttf",
+		}
+
+		for _, path := range fontPaths {
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				log.Printf("Font file not found: %s", path)
+			}
+		}
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
