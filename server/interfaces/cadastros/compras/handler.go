@@ -89,6 +89,8 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 		for _, path := range fontPaths {
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				log.Printf("Font file not found: %s", path)
+			} else {
+				log.Printf("Font file found: %s", path)
 			}
 		}
 		log.Println(err)
