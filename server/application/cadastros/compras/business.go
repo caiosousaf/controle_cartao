@@ -301,6 +301,8 @@ func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 	for _, path := range fontPaths {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			log.Printf("Font file not found: %s", path)
+		} else {
+			log.Printf("Font file found: %s", path)
 		}
 	}
 
