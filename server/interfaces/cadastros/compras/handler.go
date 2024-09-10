@@ -5,7 +5,6 @@ import (
 	"controle_cartao/middlewares"
 	"controle_cartao/utils"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 )
 
@@ -67,7 +66,6 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 
 	pdf, err := compras.PdfComprasFaturaCartao(&params, usuarioID)
 	if err != nil {
-		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
@@ -80,7 +78,6 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 	c.Header("Content-Type", "application/pdf")
 
 	// Gera o PDF e escreve no contexto de resposta
-	log.Println(pdf.Output(c.Writer), pdf)
 	if err = pdf.Output(c.Writer); err != nil {
 		c.JSON(http.StatusInternalServerError, "Erro ao gerar PDF")
 		c.Abort()
