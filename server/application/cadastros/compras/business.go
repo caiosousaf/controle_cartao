@@ -279,7 +279,7 @@ func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf
 }
 
 func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
-	pdf = gofpdf.New("P", "mm", "A4", "")
+	pdf = gofpdf.New("P", "mm", "A4", "/app/font/")
 
 	fontPaths := []string{
 		"/app/font/CaviarDreams.ttf",
@@ -294,13 +294,10 @@ func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 		}
 	}
 
-	font := "/app/font/CaviarDreams.ttf"
-	fontBold := "/app/font/CaviarDreams_Bold.ttf"
-
-	pdf.AddUTF8Font("Caviar", "", font)
-	pdf.AddUTF8Font("Caviar Bold", "B", fontBold)
-	pdf.AddUTF8Font("Caviar Italic", "I", "/app/font/CaviarDreams_Italic.ttf")
-	pdf.AddUTF8Font("Caviar BoldItalic", "BI", "/app/font/CaviarDreams_BoldItalic.ttf")
+	pdf.AddUTF8Font("Caviar", "", "CaviarDreams.ttf")
+	pdf.AddUTF8Font("Caviar Bold", "B", "CaviarDreams_Bold.ttf")
+	pdf.AddUTF8Font("Caviar Italic", "I", "CaviarDreams_Italic.ttf")
+	pdf.AddUTF8Font("Caviar BoldItalic", "BI", "CaviarDreams_BoldItalic.ttf")
 
 	// Configura a fonte
 	pdf.SetFont("Caviar", "", 5)
