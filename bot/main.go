@@ -127,7 +127,13 @@ func main() {
 			}
 
 			if AcaoAnterior == "faturas" {
-				faturas.ProcessarCasosStepComprasFatura(userCompraFaturas, userStatusFatura, bot, update, userTokens)
+				if userState, ok := userStates[update.CallbackQuery.Message.Chat.ID]; ok {
+					if userState.CurrentStepBool {
+						faturas.ContinuaCriacaoFatura(bot, update, userState)
+					}
+				} else {
+					faturas.ProcessarCasosStepComprasFatura(userCompraFaturas, userStatusFatura, bot, update, userTokens)
+				}
 			}
 
 			if AcaoAnterior == "compras" {
@@ -184,6 +190,13 @@ func main() {
 				}
 
 				AcaoAnterior = "start"
+			}
+
+			if update.Message.Text == "cancelar" {
+				if userStates[update.Message.Chat.ID] != nil {
+					userStates[update.Message.Chat.ID].CurrentStepBool = false
+					userStates[update.Message.Chat.ID].CurrentStep = ""
+				}
 			}
 
 			if update.Message.Text == "/Cartões" || update.Message.Text == "Cartões" || AcaoAnterior == "cartoes" {

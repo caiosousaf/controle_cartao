@@ -60,14 +60,14 @@ func buscarFatura(c *gin.Context) {
 func cadastrarFatura(c *gin.Context) {
 	var req faturas.Req
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
 
 	idCartao, err := utils.GetUUIDFromParam(c, "cartao_id")
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
@@ -76,7 +76,7 @@ func cadastrarFatura(c *gin.Context) {
 
 	id, err := faturas.CadastrarFatura(&req, idCartao, usuarioID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}

@@ -15,9 +15,8 @@ type UserState struct {
 
 // NewInvoice Struct para armazenar os dados de uma nova fatura
 type NewInvoice struct {
-	Title   string
-	Amount  float64
-	DueDate string
+	CartaoID       string  `json:"cartao_id"`
+	DataVencimento *string `json:"data_vencimento"`
 }
 
 type UserStepComprasFatura struct {
