@@ -254,7 +254,7 @@ func EnviarOpcoesFaturas(bot *tgbotapi.BotAPI, chatID int64, faturas *ResPagFatu
 func ProcessarCasosStepComprasFatura(userCompraFaturas *UserStepComprasFatura, reqStatus *ReqAtualizarStatus, bot *tgbotapi.BotAPI, update tgbotapi.Update, userTokens map[int64]string) {
 	switch *userCompraFaturas.Opcao {
 	case "fatura_selecionada":
-		faturasCartao, err := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%s/faturas?status=Em%20Aberto", update.CallbackQuery.Data), userTokens, update.CallbackQuery.Message.Chat.ID)
+		faturasCartao, err := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%s/faturas?pago=true", update.CallbackQuery.Data), userTokens, update.CallbackQuery.Message.Chat.ID)
 		if err != nil {
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, err.Error())
 			utils.EnviaMensagem(bot, msg)

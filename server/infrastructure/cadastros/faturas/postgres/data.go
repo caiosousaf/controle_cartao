@@ -38,7 +38,7 @@ func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id, usuarioID *uuid
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"nome_exato": utils.CriarFiltros("LOWER(TF.nome) = LOWER(?)", utils.FlagFiltroEq),
 		"ano_exato":  utils.CriarFiltros("EXTRACT(year from data_vencimento) = ?", utils.FlagFiltroEq),
-		"status":     utils.CriarFiltros("TFC.status = ?", utils.FlagFiltroEq),
+		"pago":       utils.CriarFiltros("(TFC.status <> 'Pago') = ?", utils.FlagFiltroEq),
 	}).PlaceholderFormat(sq.Dollar)
 
 	dados, prox, total, err := utils.ConfigurarPaginacao(p, &t, &consultaComFiltro)
