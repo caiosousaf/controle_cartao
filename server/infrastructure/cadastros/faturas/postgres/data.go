@@ -38,6 +38,7 @@ func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id, usuarioID *uuid
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"nome_exato": utils.CriarFiltros("LOWER(TF.nome) = LOWER(?)", utils.FlagFiltroEq),
 		"ano_exato":  utils.CriarFiltros("EXTRACT(year from data_vencimento) = ?", utils.FlagFiltroEq),
+		"status":     utils.CriarFiltros("TFC.status = ?", utils.FlagFiltroEq),
 	}).PlaceholderFormat(sq.Dollar)
 
 	dados, prox, total, err := utils.ConfigurarPaginacao(p, &t, &consultaComFiltro)
@@ -135,6 +136,8 @@ func (pg *DBFatura) VerificarFaturaCartao(data *string, idCartao, usuarioID *uui
 		From("public.t_fatura_cartao TFC").
 		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id").
 		Where(fmt.Sprintf("EXTRACT(MONTH FROM TFC.data_vencimento) = EXTRACT(MONTH FROM '%s'::DATE)", *data)).
+		Where(fmt.Sprintf("EXTRACT(YEAR FROM TFC.data_vencimento) = EXTRACT(YEAR FROM '%s'::DATE)", *data)).
+		Where(sq.Eq{"TC.id": idCartao}).
 		Where(sq.Eq{
 			"TC.id":         idCartao,
 			"TC.usuario_id": usuarioID,
