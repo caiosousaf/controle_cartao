@@ -2,6 +2,7 @@ package compras
 
 import (
 	"controle_cartao/application/cadastros/compras"
+	"controle_cartao/middlewares"
 	"controle_cartao/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -11,21 +12,23 @@ import (
 func cadastrarCompra(c *gin.Context) {
 	var req compras.Req
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
 
 	idFatura, err := utils.GetUUIDFromParam(c, "fatura_id")
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
 
-	idCompra, err := compras.CadastrarCompra(&req, idFatura)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	idCompra, err := compras.CadastrarCompra(&req, idFatura, usuarioID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
@@ -40,9 +43,11 @@ func listarCompras(c *gin.Context) {
 		return
 	}
 
-	res, err := compras.ListarCompras(&params)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := compras.ListarCompras(&params, usuarioID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
@@ -57,9 +62,11 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 		return
 	}
 
-	pdf, err := compras.PdfComprasFaturaCartao(&params)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	pdf, err := compras.PdfComprasFaturaCartao(&params, usuarioID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
@@ -71,7 +78,7 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 	c.Header("Content-Type", "application/pdf")
 
 	// Gera o PDF e escreve no contexto de resposta
-	if err := pdf.Output(c.Writer); err != nil {
+	if err = pdf.Output(c.Writer); err != nil {
 		c.JSON(http.StatusInternalServerError, "Erro ao gerar PDF")
 		c.Abort()
 		return
@@ -87,9 +94,11 @@ func obterTotalComprasValor(c *gin.Context) {
 		return
 	}
 
-	res, err := compras.ObterTotalComprasValor(&params)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := compras.ObterTotalComprasValor(&params, usuarioID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}

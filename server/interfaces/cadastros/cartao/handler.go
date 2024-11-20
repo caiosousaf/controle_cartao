@@ -2,23 +2,27 @@ package cartao
 
 import (
 	"controle_cartao/application/cadastros/cartao"
+	"controle_cartao/middlewares"
 	"controle_cartao/utils"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // cadastrarCartao godoc
 func cadastrarCartao(c *gin.Context) {
 	var req cartao.Req
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
 
+	req.UsuarioID = middlewares.AuthUsuario(c)
+
 	id, err := cartao.CadastrarCartao(&req)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
@@ -33,7 +37,9 @@ func listarCartoes(c *gin.Context) {
 		return
 	}
 
-	res, err := cartao.ListarCartoes(&p)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := cartao.ListarCartoes(&p, usuarioID)
 	if err != nil {
 		return
 	}
@@ -50,7 +56,9 @@ func buscarCartao(c *gin.Context) {
 		return
 	}
 
-	res, err := cartao.BuscarCartao(id)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := cartao.BuscarCartao(id, usuarioID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
@@ -76,7 +84,9 @@ func atualizarCartao(c *gin.Context) {
 		return
 	}
 
-	if err := cartao.AtualizarCartao(&req, id); err != nil {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := cartao.AtualizarCartao(&req, id, usuarioID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
@@ -89,13 +99,15 @@ func atualizarCartao(c *gin.Context) {
 func removerCartao(c *gin.Context) {
 	id, err := utils.GetUUIDFromParam(c, "cartao_id")
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
 
-	if err := cartao.RemoverCartao(id); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := cartao.RemoverCartao(id, usuarioID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return
 	}
@@ -112,7 +124,9 @@ func reativarCartao(c *gin.Context) {
 		return
 	}
 
-	if err := cartao.ReativarCartao(id); err != nil {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := cartao.ReativarCartao(id, usuarioID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": error.Error(err)})
 		c.Abort()
 		return

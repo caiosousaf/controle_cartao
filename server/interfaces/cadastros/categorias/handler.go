@@ -2,9 +2,11 @@ package categorias
 
 import (
 	"controle_cartao/application/cadastros/categorias"
+	"controle_cartao/middlewares"
 	"controle_cartao/utils"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // cadastrarCategoria
@@ -15,6 +17,8 @@ func cadastrarCategoria(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	req.UsuarioID = middlewares.AuthUsuario(c)
 
 	id, err := categorias.CadastrarCategoria(&req)
 	if err != nil {
@@ -42,6 +46,8 @@ func atualizarCategoria(c *gin.Context) {
 		return
 	}
 
+	req.UsuarioID = middlewares.AuthUsuario(c)
+
 	if err = categorias.AtualizarCategoria(&req, idCategoria); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
@@ -56,7 +62,9 @@ func listarCategorias(c *gin.Context) {
 		return
 	}
 
-	res, err := categorias.ListarCategorias(&params)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := categorias.ListarCategorias(&params, usuarioID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		c.Abort()
@@ -75,7 +83,9 @@ func removerCategoria(c *gin.Context) {
 		return
 	}
 
-	if err := categorias.RemoverCategoria(idCategoria); err != nil {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := categorias.RemoverCategoria(idCategoria, usuarioID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		c.Abort()
 		return
@@ -93,7 +103,9 @@ func reativarCategoria(c *gin.Context) {
 		return
 	}
 
-	if err := categorias.ReativarCategoria(idCategoria); err != nil {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := categorias.ReativarCategoria(idCategoria, usuarioID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		c.Abort()
 		return
@@ -111,7 +123,9 @@ func buscarCategoria(c *gin.Context) {
 		return
 	}
 
-	res, err := categorias.BuscarCategoria(idCategoria)
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := categorias.BuscarCategoria(idCategoria, usuarioID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		c.Abort()

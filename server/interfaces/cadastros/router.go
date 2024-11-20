@@ -5,6 +5,7 @@ import (
 	"controle_cartao/interfaces/cadastros/categorias"
 	"controle_cartao/interfaces/cadastros/compras"
 	"controle_cartao/interfaces/cadastros/faturas"
+	"controle_cartao/interfaces/cadastros/usuarios"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,4 +17,5 @@ func Router(r *gin.RouterGroup) {
 	compras.Router(r.Group("compras"))
 	categorias.Router(r.Group("categorias"))
 	categorias.RouterWithID(r.Group("categoria/:categoria_id"))
+	usuarios.Router(r.Group("usuarios"))
 }

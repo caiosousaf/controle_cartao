@@ -9,27 +9,39 @@ import (
 )
 
 // ListarCategorias é responsável por realizar a requisição para listar as categorias
-func ListarCategorias(url string) (categorias ResCategoriasPag) {
+func ListarCategorias(url string, chatID int64, userTokens map[int64]string) (categorias ResCategoriasPag, err error) {
 	var ambiente = utils.ValidarAmbiente()
 
-	resp, err := http.Get(ambiente + url)
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return
+	token, ok := userTokens[chatID]
+	if !ok {
+		return categorias, fmt.Errorf("usuário não está autenticado")
 	}
+
+	req, err := http.NewRequest(http.MethodGet, ambiente+url, nil)
+	if err != nil {
+		return categorias, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	// Lê o corpo da resposta
+	if resp.StatusCode == http.StatusUnauthorized {
+		return categorias, fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusOK {
+		return categorias, fmt.Errorf("%s", resp.Status)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
 		return
 	}
 
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	if err := json.Unmarshal(body, &categorias); err != nil {
+	if err = json.Unmarshal(body, &categorias); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}

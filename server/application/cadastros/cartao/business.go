@@ -34,6 +34,7 @@ func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
 
 	p.Filtros = make(map[string][]string)
 	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Filtros["usuario_id"] = []string{req.UsuarioID.String()}
 	p.Limite = 1
 	lista, err := repo.ListarCartoes(&p)
 	if err != nil {
@@ -59,7 +60,7 @@ func CadastrarCartao(req *Req) (id *uuid.UUID, err error) {
 }
 
 // ListarCartoes contém a regra de negócio para listar os cartões
-func ListarCartoes(p *utils.Parametros) (res *ResPag, err error) {
+func ListarCartoes(p *utils.Parametros, usuarioID *uuid.UUID) (res *ResPag, err error) {
 	msgErrPadrao := "Erro ao listar cartões"
 
 	res = new(ResPag)
@@ -71,6 +72,8 @@ func ListarCartoes(p *utils.Parametros) (res *ResPag, err error) {
 	defer db.Close()
 
 	repo := cartao.NovoRepo(db)
+
+	p.AdicionarFiltro("usuario_id", usuarioID.String())
 
 	listaCartoes, err := repo.ListarCartoes(p)
 	if err != nil {
@@ -90,7 +93,7 @@ func ListarCartoes(p *utils.Parametros) (res *ResPag, err error) {
 }
 
 // BuscarCartao contém a regra de negócio para buscar um cartão
-func BuscarCartao(id *uuid.UUID) (res *Res, err error) {
+func BuscarCartao(id, usuarioID *uuid.UUID) (res *Res, err error) {
 	const msgErrPadrao = "Erro ao buscar um cartão"
 
 	res = new(Res)
@@ -104,7 +107,7 @@ func BuscarCartao(id *uuid.UUID) (res *Res, err error) {
 
 	repo := cartao.NovoRepo(db)
 
-	buscaCartao, err := repo.BuscarCartao(id)
+	buscaCartao, err := repo.BuscarCartao(id, usuarioID)
 	if err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
@@ -112,6 +115,7 @@ func BuscarCartao(id *uuid.UUID) (res *Res, err error) {
 	res = &Res{
 		ID:              buscaCartao.ID,
 		Nome:            buscaCartao.Nome,
+		UsuarioID:       buscaCartao.UsuarioID,
 		DataCriacao:     buscaCartao.DataCriacao,
 		DataDesativacao: buscaCartao.DataDesativacao,
 	}
@@ -120,7 +124,7 @@ func BuscarCartao(id *uuid.UUID) (res *Res, err error) {
 }
 
 // AtualizarCartao contém a regra de negócio para atualizar um cartão
-func AtualizarCartao(req *ReqAtualizar, id *uuid.UUID) (err error) {
+func AtualizarCartao(req *ReqAtualizar, id, usuarioID *uuid.UUID) (err error) {
 	const (
 		msgErrPadrao         = "Erro ao atualizar cartão"
 		msgErrPadraoListagem = "Erro ao listar cartão por nome"
@@ -145,6 +149,7 @@ func AtualizarCartao(req *ReqAtualizar, id *uuid.UUID) (err error) {
 
 	p.Filtros = make(map[string][]string)
 	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Filtros["usuario_id"] = []string{usuarioID.String()}
 	p.Limite = 1
 	lista, err := repo.ListarCartoes(&p)
 	if err != nil {
@@ -161,7 +166,7 @@ func AtualizarCartao(req *ReqAtualizar, id *uuid.UUID) (err error) {
 		}
 	}
 
-	if err = repo.AtualizarCartao(reqInfra, id); err != nil {
+	if err = repo.AtualizarCartao(reqInfra, id, usuarioID); err != nil {
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
@@ -169,7 +174,7 @@ func AtualizarCartao(req *ReqAtualizar, id *uuid.UUID) (err error) {
 }
 
 // RemoverCartao contém a regra de negócio para desativar um cartão de crédito
-func RemoverCartao(id *uuid.UUID) (err error) {
+func RemoverCartao(id, usuarioID *uuid.UUID) (err error) {
 	const msgErrPadrao = "Erro ao desativar cartão"
 
 	db, err := database.Conectar()
@@ -181,7 +186,7 @@ func RemoverCartao(id *uuid.UUID) (err error) {
 
 	repo := cartao.NovoRepo(db)
 
-	if err := repo.RemoverCartao(id); err != nil {
+	if err := repo.RemoverCartao(id, usuarioID); err != nil {
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
@@ -189,7 +194,7 @@ func RemoverCartao(id *uuid.UUID) (err error) {
 }
 
 // ReativarCartao contém a regra de negócio para reativar um cartão
-func ReativarCartao(id *uuid.UUID) (err error) {
+func ReativarCartao(id, usuarioID *uuid.UUID) (err error) {
 	const msgErrPadrao = "Erro ao reativar cartão"
 
 	db, err := database.Conectar()
@@ -201,7 +206,7 @@ func ReativarCartao(id *uuid.UUID) (err error) {
 
 	repo := cartao.NovoRepo(db)
 
-	if err := repo.ReativarCartao(id); err != nil {
+	if err := repo.ReativarCartao(id, usuarioID); err != nil {
 		return utils.Wrap(err, msgErrPadrao)
 	}
 

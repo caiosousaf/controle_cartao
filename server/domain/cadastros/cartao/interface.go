@@ -10,8 +10,8 @@ import (
 type ICartao interface {
 	CadastrarCartao(req *cartao.Cartao) error
 	ListarCartoes(p *utils.Parametros) (*cartao.CartaoPag, error)
-	BuscarCartao(id *uuid.UUID) (*cartao.Cartao, error)
-	AtualizarCartao(req *cartao.Cartao, id *uuid.UUID) error
-	RemoverCartao(id *uuid.UUID) error
-	ReativarCartao(id *uuid.UUID) error
+	BuscarCartao(id, usuarioID *uuid.UUID) (*cartao.Cartao, error)
+	AtualizarCartao(req *cartao.Cartao, id, usuarioID *uuid.UUID) error
+	RemoverCartao(id, usuarioID *uuid.UUID) error
+	ReativarCartao(id, usuarioID *uuid.UUID) error
 }

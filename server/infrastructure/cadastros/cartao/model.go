@@ -11,6 +11,7 @@ type Cartao struct {
 	Nome            *string    `sql:"nome" apelido:"nome"`
 	DataCriacao     *time.Time `sql:"data_criacao" apelido:"data_criacao"`
 	DataDesativacao *time.Time `sql:"data_desativacao" apelido:"data_desativacao"`
+	UsuarioID       *uuid.UUID `sql:"usuario_id" apelido:"usuario_id"`
 }
 
 // CartaoPag estrutura para retorno de lista de dados paginada

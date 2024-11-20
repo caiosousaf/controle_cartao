@@ -6,11 +6,13 @@ import (
 	infra "controle_cartao/infrastructure/cadastros/faturas"
 	"controle_cartao/utils"
 	"database/sql"
+	"errors"
+
 	"github.com/google/uuid"
 )
 
 // ListarFaturasCartao contém a regra de negócio para listar as faturas de um cartão
-func ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res *ResPag, err error) {
+func ListarFaturasCartao(p *utils.Parametros, id, usuarioID *uuid.UUID) (res *ResPag, err error) {
 	const msgErrPadrao = "Erro ao listar faturas de um cartão"
 
 	res = new(ResPag)
@@ -23,7 +25,7 @@ func ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res *ResPag, err e
 
 	repo := faturas.NovoRepo(db)
 
-	listaFaturas, err := repo.ListarFaturasCartao(p, id)
+	listaFaturas, err := repo.ListarFaturasCartao(p, id, usuarioID)
 	if err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
@@ -41,7 +43,7 @@ func ListarFaturasCartao(p *utils.Parametros, id *uuid.UUID) (res *ResPag, err e
 }
 
 // BuscarFatura contém a regra de negócio para buscar uma fatura
-func BuscarFatura(idFatura *uuid.UUID) (res *Res, err error) {
+func BuscarFatura(idFatura, usuarioID *uuid.UUID) (res *Res, err error) {
 	const msgErrPadrao = "Erro ao buscar fatura de cartão"
 
 	db, err := database.Conectar()
@@ -52,7 +54,7 @@ func BuscarFatura(idFatura *uuid.UUID) (res *Res, err error) {
 
 	repo := faturas.NovoRepo(db)
 
-	buscaFatura, err := repo.BuscarFatura(idFatura)
+	buscaFatura, err := repo.BuscarFatura(idFatura, usuarioID)
 	if err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
@@ -71,7 +73,7 @@ func BuscarFatura(idFatura *uuid.UUID) (res *Res, err error) {
 }
 
 // CadastrarFatura contém a regra de negócio para cadastrar uma nova fatura
-func CadastrarFatura(req *Req, idCartao *uuid.UUID) (id *uuid.UUID, err error) {
+func CadastrarFatura(req *Req, idCartao, usuarioID *uuid.UUID) (id *uuid.UUID, err error) {
 	const (
 		msgErrPadrao                = "Erro ao cadastrar nova fatura"
 		msgErrPadraoVerificarFatura = "Erro ao verificar se já existe fatura cadastrada para o mês de vencimento"
@@ -101,10 +103,14 @@ func CadastrarFatura(req *Req, idCartao *uuid.UUID) (id *uuid.UUID, err error) {
 		return id, utils.Wrap(err, msgErrPadrao)
 	}
 
-	cartaoID, err := repo.VerificarFaturaCartao(req.DataVencimento, req.FaturaCartaoID)
+	if ok := repo.CartaoPertenceUsuario(idCartao, usuarioID); ok != true {
+		return id, utils.NewErr("Cartão selecionado não pertence ao usuário")
+	}
+
+	cartaoID, err := repo.VerificarFaturaCartao(req.DataVencimento, req.FaturaCartaoID, usuarioID)
 
 	if err != nil {
-		if err == sql.ErrNoRows && cartaoID == nil {
+		if errors.Is(err, sql.ErrNoRows) && cartaoID == nil {
 			if err = repo.CadastrarFatura(reqInfra); err != nil {
 				return id, utils.Wrap(err, msgErrPadrao)
 			}
@@ -121,7 +127,7 @@ func CadastrarFatura(req *Req, idCartao *uuid.UUID) (id *uuid.UUID, err error) {
 }
 
 // AtualizarFatura contém a regra de negócio para atualizar uma fatura
-func AtualizarFatura(req *ReqAtualizar, idCartao, idFatura *uuid.UUID) (err error) {
+func AtualizarFatura(req *ReqAtualizar, idCartao, idFatura, usuarioID *uuid.UUID) (err error) {
 	const (
 		msgErrPadrao                = "Erro ao atualizar fatura"
 		msgErrPadraoVerificarFatura = "Erro ao verificar se já existe fatura cadastrada para o mês de vencimento"
@@ -150,10 +156,14 @@ func AtualizarFatura(req *ReqAtualizar, idCartao, idFatura *uuid.UUID) (err erro
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
-	faturaID, err := repo.VerificarFaturaCartao(req.DataVencimento, idCartao)
+	if ok := repo.CartaoPertenceUsuario(idCartao, usuarioID); ok != true {
+		return utils.NewErr("Cartão selecionado não pertence ao usuário")
+	}
+
+	faturaID, err := repo.VerificarFaturaCartao(req.DataVencimento, idCartao, usuarioID)
 
 	if err != nil {
-		if err == sql.ErrNoRows && faturaID == nil {
+		if errors.Is(err, sql.ErrNoRows) && faturaID == nil {
 			if err = repo.AtualizarFatura(reqInfra, idFatura); err != nil {
 				return utils.Wrap(err, msgErrPadrao)
 			}
@@ -169,7 +179,7 @@ func AtualizarFatura(req *ReqAtualizar, idCartao, idFatura *uuid.UUID) (err erro
 }
 
 // AtualizarStatusFatura contém a regra de negócio para atualizar o status de uma fatura
-func AtualizarStatusFatura(req *ReqAtualizarStatus, idFatura *uuid.UUID) (err error) {
+func AtualizarStatusFatura(req *ReqAtualizarStatus, idFatura, usuarioID *uuid.UUID) (err error) {
 	const (
 		msgErrPadrao       = "Erro ao atualizar status de fatura"
 		msgErrBuscarFatura = "Erro ao buscar fatura"
@@ -189,9 +199,13 @@ func AtualizarStatusFatura(req *ReqAtualizarStatus, idFatura *uuid.UUID) (err er
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
-	buscaFatura, err := repo.BuscarFatura(idFatura)
+	buscaFatura, err := repo.BuscarFatura(idFatura, usuarioID)
 	if err != nil {
 		return utils.Wrap(err, msgErrBuscarFatura)
+	}
+
+	if ok := repo.CartaoPertenceUsuario(buscaFatura.FaturaCartaoID, usuarioID); ok != true {
+		return utils.NewErr("Cartão selecionado não pertence ao usuário")
 	}
 
 	if *buscaFatura.Status != FaturaPaga {

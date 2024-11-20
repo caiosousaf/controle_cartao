@@ -16,8 +16,8 @@ type DBCartao struct {
 // CadastrarCartao cadastra um novo cartao no banco de dados
 func (pg *DBCartao) CadastrarCartao(req *model.Cartao) (err error) {
 	if err = sq.StatementBuilder.RunWith(pg.DB).Insert("public.t_cartao").
-		Columns("nome").
-		Values(*req.Nome).
+		Columns("nome", "usuario_id").
+		Values(*req.Nome, req.UsuarioID).
 		PlaceholderFormat(sq.Dollar).
 		Suffix(`RETURNING "id"`).
 		Scan(&req.ID); err != nil {
@@ -39,11 +39,13 @@ func (pg *DBCartao) ListarCartoes(p *utils.Parametros) (res *model.CartaoPag, er
 	}
 
 	consultaSql := sq.StatementBuilder.RunWith(pg.DB).Select(campos...).
-		From("public.t_cartao TC")
+		From("public.t_cartao TC").
+		Where("TC.data_desativacao IS NULL")
 
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"nome_exato": utils.CriarFiltros("lower(TC.nome) = lower(?)", utils.FlagFiltroEq),
 		"ativo":      utils.CriarFiltros("data_desativacao IS NULL = ?", utils.FlagFiltroEq),
+		"usuario_id": utils.CriarFiltros("usuario_id = ?::UUID", utils.FlagFiltroEq),
 	}).PlaceholderFormat(sq.Dollar)
 
 	dados, prox, total, err := utils.ConfigurarPaginacao(p, &t, &consultaComFiltro)
@@ -57,12 +59,13 @@ func (pg *DBCartao) ListarCartoes(p *utils.Parametros) (res *model.CartaoPag, er
 }
 
 // BuscarCartao busca os dados de um cartão no banco de dados dado o seu id
-func (pg *DBCartao) BuscarCartao(id *uuid.UUID) (res *model.Cartao, err error) {
+func (pg *DBCartao) BuscarCartao(id, usuarioID *uuid.UUID) (res *model.Cartao, err error) {
 	res = new(model.Cartao)
-	if err = sq.StatementBuilder.RunWith(pg.DB).Select("id, nome, data_criacao, data_desativacao").
+	if err = sq.StatementBuilder.RunWith(pg.DB).Select("id, nome, usuario_id, data_criacao, data_desativacao").
 		From("public.t_cartao").
 		Where("id = $1", id).
-		Where("data_desativacao ISNULL").Scan(&res.ID, &res.Nome, &res.DataCriacao, &res.DataDesativacao); err != nil {
+		Where("usuario_id = $2", usuarioID).
+		Where("data_desativacao ISNULL").Scan(&res.ID, &res.Nome, &res.UsuarioID, &res.DataCriacao, &res.DataDesativacao); err != nil {
 		return res, err
 	}
 
@@ -70,11 +73,12 @@ func (pg *DBCartao) BuscarCartao(id *uuid.UUID) (res *model.Cartao, err error) {
 }
 
 // AtualizarCartao atualiza os dados de um cartão no banco de dados dado o seu id
-func (pg *DBCartao) AtualizarCartao(req *model.Cartao, id *uuid.UUID) (err error) {
+func (pg *DBCartao) AtualizarCartao(req *model.Cartao, id, usuarioID *uuid.UUID) (err error) {
 	updateBuilder := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_cartao").
 		Set("nome", req.Nome).
 		Where(sq.Eq{
 			"id":               id,
+			"usuario_id":       usuarioID,
 			"data_desativacao": nil,
 		}).
 		PlaceholderFormat(sq.Dollar)
@@ -97,11 +101,12 @@ func (pg *DBCartao) AtualizarCartao(req *model.Cartao, id *uuid.UUID) (err error
 }
 
 // RemoverCartao desativa os dados de um cartão no banco de dados dado o seu id
-func (pg *DBCartao) RemoverCartao(id *uuid.UUID) (err error) {
+func (pg *DBCartao) RemoverCartao(id, usuarioID *uuid.UUID) (err error) {
 	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_cartao").
 		Set("data_desativacao", "NOW()").
 		Where(sq.Eq{
-			"id": id,
+			"id":         id,
+			"usuario_id": usuarioID,
 		}).
 		PlaceholderFormat(sq.Dollar).
 		Exec()
@@ -119,11 +124,12 @@ func (pg *DBCartao) RemoverCartao(id *uuid.UUID) (err error) {
 }
 
 // ReativarCartao reativa os dados de um cartão no banco de dados dado o seu id
-func (pg *DBCartao) ReativarCartao(id *uuid.UUID) (err error) {
+func (pg *DBCartao) ReativarCartao(id, usuarioID *uuid.UUID) (err error) {
 	result, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_cartao").
 		Set("data_desativacao", nil).
 		Where(sq.Eq{
-			"id": id,
+			"id":         id,
+			"usuario_id": usuarioID,
 		}).
 		PlaceholderFormat(sq.Dollar).
 		Exec()

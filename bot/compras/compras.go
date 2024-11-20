@@ -14,16 +14,22 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // ProcessoAcoesCompras é responsável por coordenar as ações relacionadas a compras
-func ProcessoAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCompras, acaoAnterior string) {
+func ProcessoAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCartaoState *UserStateCompras, acaoAnterior string, userTokens map[int64]string) {
 
 	switch message.Text {
 	case "Compras":
 		gerarOpcoesAcoesCompras(bot, message)
 	case "Cadastrar Compra":
-		cartoes := cartao.ListarCartoes(cartao.BaseURLCartoes)
+		cartoes, err := cartao.ListarCartoes(cartao.BaseURLCartoes, userTokens, message.Chat.ID)
+		if err != nil {
+			msg := tgbotapi.NewMessage(message.Chat.ID, err.Error())
+			utils.EnviaMensagem(bot, msg)
+			return
+		}
 
 		EnviarOpcoesCartoesFatura(bot, message.Chat.ID, &cartoes, userCartaoState)
 	case "Obter total compras":
@@ -31,12 +37,12 @@ func ProcessoAcoesCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userC
 	}
 
 	if acaoAnterior == "compras" {
-		ProcessamentoObterTotalCompras(bot, message, userCartaoState)
+		ProcessamentoObterTotalCompras(bot, message, userCartaoState, userTokens)
 	}
 }
 
 // ProcessamentoObterTotalCompras é responsável por processar o fluxo para obter o valor total compras
-func ProcessamentoObterTotalCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCompras *UserStateCompras) {
+func ProcessamentoObterTotalCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCompras *UserStateCompras, userTokens map[int64]string) {
 	var cancelado bool
 
 	switch *userCompras.CurrentStep {
@@ -85,14 +91,17 @@ func ProcessamentoObterTotalCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Mess
 		cancelado = utils.CancelarOperacao(bot, &message.Text, userCompras.CurrentStep, message.Chat.ID)
 
 		if !cancelado {
-			var res *ResObterComprasTotal
-
 			switch strings.ToLower(message.Text) {
 			case "sim":
 				userCompras.ObterTotalCompras.UltimaParcela = utils.ObterPonteiro[bool](true)
 				userCompras.CurrentStep = nil
 
-				res = ObterComprasTotal(userCompras)
+				res, err := ObterComprasTotal(userCompras, userTokens, message.Chat.ID)
+				if err != nil {
+					msg := tgbotapi.NewMessage(message.Chat.ID, err.Error())
+					utils.EnviaMensagem(bot, msg)
+					return
+				}
 
 				msg := tgbotapi.NewMessage(message.Chat.ID, "Valor total: "+*res.Total)
 				utils.EnviaMensagem(bot, msg)
@@ -100,7 +109,12 @@ func ProcessamentoObterTotalCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Mess
 				userCompras.ObterTotalCompras.UltimaParcela = utils.ObterPonteiro[bool](false)
 				userCompras.CurrentStep = nil
 
-				res = ObterComprasTotal(userCompras)
+				res, err := ObterComprasTotal(userCompras, userTokens, message.Chat.ID)
+				if err != nil {
+					msg := tgbotapi.NewMessage(message.Chat.ID, err.Error())
+					utils.EnviaMensagem(bot, msg)
+					return
+				}
 
 				msg := tgbotapi.NewMessage(message.Chat.ID, "Valor total: "+*res.Total)
 				utils.EnviaMensagem(bot, msg)
@@ -113,7 +127,7 @@ func ProcessamentoObterTotalCompras(bot *tgbotapi.BotAPI, message *tgbotapi.Mess
 }
 
 // ProcessoAcoesCadastroCompra é responsável pelo fluxo de cadastro de uma compra
-func ProcessoAcoesCadastroCompra(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCompras *UserStateCompras) {
+func ProcessoAcoesCadastroCompra(bot *tgbotapi.BotAPI, message *tgbotapi.Message, userCompras *UserStateCompras, userTokens map[int64]string) {
 	if strings.ToLower(message.Text) == "cancelar" {
 		userCompras.CurrentStep = nil
 		userCompras.NovaCompraData = NovaCompra{
@@ -179,14 +193,25 @@ func ProcessoAcoesCadastroCompra(bot *tgbotapi.BotAPI, message *tgbotapi.Message
 
 		userCompras.NovaCompraData.QuantidadeParcelas = &qtdParcelas
 		*userCompras.CurrentStep = "quantidade_parcelas_selecionada"
-		msg := tgbotapi.NewMessage(message.Chat.ID, "Por favor, Diga qual foi a data da compra, ex: 2024-02-20")
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Por favor, Diga qual foi a data da compra, ex: 20-02-2024")
 
 		utils.EnviaMensagem(bot, msg)
 	case "quantidade_parcelas_selecionada":
-		userCompras.NovaCompraData.DataCompra = &message.Text
+		data, _ := time.Parse("02-01-2006", message.Text)
+		dataFormatada := data.Format(time.DateOnly)
+
+		userCompras.NovaCompraData.DataCompra = &dataFormatada
 		*userCompras.CurrentStep = ""
 
-		CadastrarCompra(userCompras)
+		err := CadastrarCompra(userCompras, userTokens, message.Chat.ID)
+		if err != nil {
+			msg := tgbotapi.NewMessage(message.Chat.ID, err.Error())
+			utils.EnviaMensagem(bot, msg)
+			return
+		}
+
+		msg := tgbotapi.NewMessage(message.Chat.ID, "Compra cadastrada com sucesso!")
+		utils.EnviaMensagem(bot, msg)
 	}
 }
 
@@ -329,15 +354,31 @@ func InicioCriacaoCompra(bot *tgbotapi.BotAPI, chatID int64, callbackQuery *tgbo
 }
 
 // ListarComprasFatura é responsável por realizar a requisição de listagem para compras
-func ListarComprasFatura(idFatura *string) (res ResComprasPag) {
+func ListarComprasFatura(idFatura *string, userTokens map[int64]string, chatID int64) (res ResComprasPag, err error) {
 	var ambiente = utils.ValidarAmbiente()
 
-	resp, err := http.Get(ambiente + BaseURLCompras + "?fatura_id=" + *idFatura)
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return
+	token, ok := userTokens[chatID]
+	if !ok {
+		return res, fmt.Errorf("usuário não está autenticado")
 	}
+
+	req, err := http.NewRequest(http.MethodGet, ambiente+BaseURLCompras+"?fatura_id="+*idFatura, nil)
+	if err != nil {
+		return res, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return res, fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusOK {
+		return res, fmt.Errorf("%s", resp.Status)
+	}
 
 	// Lê o corpo da resposta
 	body, err := io.ReadAll(resp.Body)
@@ -346,10 +387,7 @@ func ListarComprasFatura(idFatura *string) (res ResComprasPag) {
 		return
 	}
 
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	if err := json.Unmarshal(body, &res); err != nil {
+	if err = json.Unmarshal(body, &res); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}
@@ -358,8 +396,13 @@ func ListarComprasFatura(idFatura *string) (res ResComprasPag) {
 }
 
 // CadastrarCompra é responsável por realizar a requisição para cadastrar uma compra
-func CadastrarCompra(compras *UserStateCompras) (res ResComprasPag) {
+func CadastrarCompra(compras *UserStateCompras, userTokens map[int64]string, chatID int64) (err error) {
 	var ambiente = utils.ValidarAmbiente()
+
+	token, ok := userTokens[chatID]
+	if !ok {
+		return fmt.Errorf("usuário não está autenticado")
+	}
 
 	var baseURLCadastroCompras = fmt.Sprintf("%s/cadastros/fatura", ambiente)
 	// Montar os dados a serem enviados no corpo do POST
@@ -381,75 +424,83 @@ func CadastrarCompra(compras *UserStateCompras) (res ResComprasPag) {
 		return
 	}
 
-	// Fazer a requisição POST
-	resp, err := http.Post(baseURLCadastroCompras+fmt.Sprintf("/%s/compras", *compras.FaturaID), "application/json", bytes.NewBuffer(dadosJSON))
+	req, err := http.NewRequest(http.MethodPost, baseURLCadastroCompras+fmt.Sprintf("/%s/compras", *compras.FaturaID), bytes.NewBuffer(dadosJSON))
 	if err != nil {
-		fmt.Println("Erro ao fazer a requisição POST:", err)
-		return
+		return err
 	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
 
-	// Lê o corpo da resposta
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Erro ao ler a resposta:", err)
-		return
-	}
-
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	if err := json.Unmarshal(body, &res); err != nil {
-		fmt.Println("Erro ao decodificar a resposta JSON:", err)
-		return
+	if resp.StatusCode == http.StatusUnauthorized {
+		return fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("Erro ao realizar cadastro da compra!")
 	}
 
 	return
 }
 
 // ObterComprasPdf é responsável por realizar a requisição que obtém o pdf com as compras
-func ObterComprasPdf(idFatura *uuid.UUID, idCartao *uuid.UUID) []byte {
+func ObterComprasPdf(idFatura *uuid.UUID, idCartao *uuid.UUID, userTokens map[int64]string, chatID int64) (body []byte, err error) {
 	var (
 		resp *http.Response
-		err  error
+		req  *http.Request
 	)
 
 	var ambiente = utils.ValidarAmbiente()
 
+	token, ok := userTokens[chatID]
+	if !ok {
+		return nil, fmt.Errorf("usuário não está autenticado")
+	}
+
 	if idFatura != nil && idCartao != nil {
-		resp, err = http.Get(ambiente + BaseURLComprasPdf + "?fatura_id=" + idFatura.String() + "&cartao_id=" + idCartao.String())
+		req, err = http.NewRequest(http.MethodGet, ambiente+BaseURLComprasPdf+"?fatura_id="+idFatura.String()+"&cartao_id="+idCartao.String(), nil)
 		if err != nil {
-			fmt.Println("Erro ao fazer a requisição:", err)
-			return nil
+			return
 		}
-		defer resp.Body.Close()
 	} else {
-		resp, err = http.Get(BaseURLComprasPdf + "?cartao_id=" + idCartao.String())
+		req, err = http.NewRequest(http.MethodGet, ambiente+BaseURLComprasPdf+"?cartao_id="+idCartao.String(), nil)
 		if err != nil {
-			fmt.Println("Erro ao fazer a requisição:", err)
-			return nil
+			return
 		}
-		defer resp.Body.Close()
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err = client.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return body, fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusOK {
+		return body, fmt.Errorf("%s", resp.Status)
 	}
 
 	// Lê o corpo da resposta
-	body, err := io.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
-		return nil
+		return
 	}
 
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	return body
+	return
 }
 
 // ObterComprasTotal é responsável por realizar a requisição que obtém o valor total das compras
-func ObterComprasTotal(stateCompra *UserStateCompras) (res *ResObterComprasTotal) {
+func ObterComprasTotal(stateCompra *UserStateCompras, userTokens map[int64]string, chatID int64) (res *ResObterComprasTotal, err error) {
 	var (
 		resp            *http.Response
-		err             error
 		ambiente        = utils.ValidarAmbiente()
 		urlObterCompras = ambiente + BaseURLCompras
 	)
@@ -464,25 +515,39 @@ func ObterComprasTotal(stateCompra *UserStateCompras) (res *ResObterComprasTotal
 		urlObterCompras += fmt.Sprintf("&ultima_parcela=%v", *stateCompra.ObterTotalCompras.UltimaParcela)
 	}
 
-	resp, err = http.Get(urlObterCompras)
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return nil
+	token, ok := userTokens[chatID]
+	if !ok {
+		return res, fmt.Errorf("usuário não está autenticado")
 	}
 
+	req, err := http.NewRequest(http.MethodGet, urlObterCompras, nil)
+	if err != nil {
+		return res, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+
+	resp, err = client.Do(req)
+	if err != nil {
+		return res, err
+	}
 	defer resp.Body.Close()
 
-	// Lê o corpo da resposta
+	if resp.StatusCode == http.StatusUnauthorized {
+		return res, fmt.Errorf("Realize login!")
+	} else if resp.StatusCode != http.StatusOK {
+		return res, fmt.Errorf("%s", resp.Status)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Erro ao ler a resposta:", err)
-		return nil
+		return
 	}
 
-	// Imprime a resposta da API
-	fmt.Println("Resposta da API:", string(body))
-
-	if err := json.Unmarshal(body, &res); err != nil {
+	if err = json.Unmarshal(body, &res); err != nil {
 		fmt.Println("Erro ao decodificar a resposta JSON:", err)
 		return
 	}

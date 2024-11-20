@@ -34,6 +34,7 @@ func CadastrarCategoria(req *ReqCategoria) (id *uuid.UUID, err error) {
 
 	p.Filtros = make(map[string][]string)
 	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Filtros["usuario_id"] = []string{req.UsuarioID.String()}
 	p.Limite = 1
 	lista, err := repo.ListarCategorias(&p)
 	if err != nil {
@@ -84,6 +85,7 @@ func AtualizarCategoria(req *ReqCategoria, idCategoria *uuid.UUID) (err error) {
 
 	p.Filtros = make(map[string][]string)
 	p.Filtros["nome_exato"] = []string{*req.Nome}
+	p.Filtros["usuario_id"] = []string{req.UsuarioID.String()}
 	p.Limite = 1
 	lista, err := repo.ListarCategorias(&p)
 	if err != nil {
@@ -96,7 +98,7 @@ func AtualizarCategoria(req *ReqCategoria, idCategoria *uuid.UUID) (err error) {
 		} else if *idCategoria == *lista.Dados[0].ID {
 			return
 		} else {
-			return utils.NewErr("Já existe um cartão ativo com esse nome!")
+			return utils.NewErr("Já existe uma categoria ativa com esse nome!")
 		}
 	}
 
@@ -108,7 +110,7 @@ func AtualizarCategoria(req *ReqCategoria, idCategoria *uuid.UUID) (err error) {
 }
 
 // ListarCategorias contém a regra de negócio para listar as categorias
-func ListarCategorias(params *utils.Parametros) (res *ResCategoriasPag, err error) {
+func ListarCategorias(params *utils.Parametros, usuarioID *uuid.UUID) (res *ResCategoriasPag, err error) {
 	const msgErrPadrao = "Erro ao listar categorias"
 
 	res = new(ResCategoriasPag)
@@ -121,6 +123,8 @@ func ListarCategorias(params *utils.Parametros) (res *ResCategoriasPag, err erro
 	defer db.Close()
 
 	repo := categorias.NovoRepo(db)
+
+	params.AdicionarFiltro("usuario_id", usuarioID.String())
 
 	listaCategorias, err := repo.ListarCategorias(params)
 	if err != nil {
@@ -140,7 +144,7 @@ func ListarCategorias(params *utils.Parametros) (res *ResCategoriasPag, err erro
 }
 
 // RemoverCategoria contém a regra de negócio para remover uma categoria
-func RemoverCategoria(idCategoria *uuid.UUID) error {
+func RemoverCategoria(idCategoria, usuarioID *uuid.UUID) error {
 	const msgErrPadrao = "Erro ao remover categoria"
 
 	db, err := database.Conectar()
@@ -151,7 +155,7 @@ func RemoverCategoria(idCategoria *uuid.UUID) error {
 
 	repo := categorias.NovoRepo(db)
 
-	if err := repo.RemoverCategoria(idCategoria); err != nil {
+	if err := repo.RemoverCategoria(idCategoria, usuarioID); err != nil {
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
@@ -159,7 +163,7 @@ func RemoverCategoria(idCategoria *uuid.UUID) error {
 }
 
 // ReativarCategoria contém a regra de negócio para reativar uma categoria
-func ReativarCategoria(idCategoria *uuid.UUID) error {
+func ReativarCategoria(idCategoria, usuarioID *uuid.UUID) error {
 	const msgErrPadrao = "Erro ao reativar categoria"
 
 	db, err := database.Conectar()
@@ -170,7 +174,7 @@ func ReativarCategoria(idCategoria *uuid.UUID) error {
 
 	repo := categorias.NovoRepo(db)
 
-	if err := repo.ReativarCategoria(idCategoria); err != nil {
+	if err := repo.ReativarCategoria(idCategoria, usuarioID); err != nil {
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
@@ -178,7 +182,7 @@ func ReativarCategoria(idCategoria *uuid.UUID) error {
 }
 
 // BuscarCategoria contém a regra de negócio para buscar uma categoria
-func BuscarCategoria(idCategoria *uuid.UUID) (res ResCategorias, err error) {
+func BuscarCategoria(idCategoria, usuarioID *uuid.UUID) (res ResCategorias, err error) {
 	const msgErrPadrao = "Erro ao buscar categoria"
 
 	db, err := database.Conectar()
@@ -189,7 +193,7 @@ func BuscarCategoria(idCategoria *uuid.UUID) (res ResCategorias, err error) {
 
 	repo := categorias.NovoRepo(db)
 
-	resCategoria, err := repo.BuscarCategoria(idCategoria)
+	resCategoria, err := repo.BuscarCategoria(idCategoria, usuarioID)
 	if err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
 	}
@@ -197,6 +201,7 @@ func BuscarCategoria(idCategoria *uuid.UUID) (res ResCategorias, err error) {
 	res = ResCategorias{
 		ID:              resCategoria.ID,
 		Nome:            resCategoria.Nome,
+		UsuarioID:       resCategoria.UsuarioID,
 		DataCriacao:     resCategoria.DataCriacao,
 		DataDesativacao: resCategoria.DataDesativacao,
 	}

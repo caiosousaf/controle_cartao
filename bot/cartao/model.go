@@ -7,6 +7,7 @@ import (
 
 // UserStateCartao Struct para armazenar o estado da conversa do usuário para ações de cartões
 type UserStateCartao struct {
+	ChatID          int64
 	CurrentStep     string
 	CurrentStepBool bool
 	NovoCartaoData  NovoCartao

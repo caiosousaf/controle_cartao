@@ -11,7 +11,7 @@ type ICategoria interface {
 	CadastrarCategoria(req *categorias.Categorias) error
 	AtualizarCategoria(req *categorias.Categorias, idCategoria *uuid.UUID) error
 	ListarCategorias(params *utils.Parametros) (*categorias.CategoriasPag, error)
-	RemoverCategoria(idCategoria *uuid.UUID) error
-	ReativarCategoria(idCategoria *uuid.UUID) error
-	BuscarCategoria(idCategoria *uuid.UUID) (*categorias.Categorias, error)
+	RemoverCategoria(idCategoria, usuarioID *uuid.UUID) error
+	ReativarCategoria(idCategoria, usuarioID *uuid.UUID) error
+	BuscarCategoria(idCategoria, usuarioID *uuid.UUID) (*categorias.Categorias, error)
 }
