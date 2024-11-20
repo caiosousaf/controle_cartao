@@ -139,7 +139,7 @@ func main() {
 			if AcaoAnterior == "compras" {
 				switch *userCompras.CurrentStep {
 				case "selecionar_fatura":
-					faturasCartao, err := faturas.ListarFaturas(fmt.Sprintf(faturas.BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data), userTokens, update.CallbackQuery.Message.Chat.ID)
+					faturasCartao, err := faturas.ListarFaturas(fmt.Sprintf(faturas.BaseURLFaturas+"%s/faturas?pago=true", update.CallbackQuery.Data), userTokens, update.CallbackQuery.Message.Chat.ID)
 					if err != nil {
 						msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, err.Error())
 						utils.EnviaMensagem(bot, msg)
