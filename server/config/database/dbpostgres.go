@@ -2,24 +2,19 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
+	"net/url"
 	"os"
 
 	_ "github.com/lib/pq"
 )
 
 func Conectar() (*sql.DB, error) {
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
+	serviceURI := os.Getenv("DB_SERVICE_URI")
 
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
-		"password=%s dbname=%s sslmode=require",
-		host, port, user, password, dbname)
+	conn, _ := url.Parse(serviceURI)
+	conn.RawQuery = os.Getenv("DB_CONNECTION_URI")
 
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err := sql.Open("postgres", conn.String())
 	if err != nil {
 		panic(err)
 	}
