@@ -196,6 +196,7 @@ func main() {
 				if userStates[update.Message.Chat.ID] != nil {
 					userStates[update.Message.Chat.ID].CurrentStepBool = false
 					userStates[update.Message.Chat.ID].CurrentStep = ""
+					userCompraFaturas.Opcao = nil
 				}
 			}
 
