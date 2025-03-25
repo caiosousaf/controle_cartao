@@ -265,7 +265,7 @@ func ProcessarCasosStepComprasFatura(userCompraFaturas *UserStepComprasFatura, r
 	case "cartao_fatura_selecionado":
 		ProcessCallbackQuery(bot, update.CallbackQuery, userTokens)
 	case "Pagar Fatura":
-		faturasCartao, err := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%s/faturas", update.CallbackQuery.Data), userTokens, update.CallbackQuery.Message.Chat.ID)
+		faturasCartao, err := ListarFaturas(fmt.Sprintf(BaseURLFaturas+"%s/faturas?pago=true", update.CallbackQuery.Data), userTokens, update.CallbackQuery.Message.Chat.ID)
 		if err != nil {
 			msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, err.Error())
 			utils.EnviaMensagem(bot, msg)
