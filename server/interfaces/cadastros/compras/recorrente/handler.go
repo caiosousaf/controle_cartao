@@ -1,0 +1,30 @@
+package recorrente
+
+import (
+	"controle_cartao/application/cadastros/compras/recorrente"
+	"controle_cartao/middlewares"
+	"controle_cartao/utils"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+// listarComprasRecorrentes godoc
+func listarComprasRecorrentes(c *gin.Context) {
+	params, err := utils.ParseParams(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := recorrente.ListarComprasRecorrentes(&params, usuarioID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
