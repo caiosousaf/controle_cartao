@@ -23,3 +23,18 @@ type RecorrentesPag struct {
 	Prox  *bool
 	Total *int64
 }
+
+// ComprasRecorrentes é a estrutura que define os dados para cadastro das compras recorrentes
+type ComprasRecorrentes struct {
+	ID                 *uuid.UUID
+	Nome               *string
+	Descricao          *string
+	LocalCompra        *string
+	CategoriaID        *uuid.UUID
+	ValorParcela       *float64
+	ParcelaAtual       *int64
+	QuantidadeParcelas *int64
+	FaturaID           *uuid.UUID
+	DataCompra         *string
+	Recorrente         bool
+}

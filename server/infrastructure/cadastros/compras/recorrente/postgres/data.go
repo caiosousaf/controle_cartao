@@ -44,3 +44,39 @@ func (pg *DBRecorrentes) ListarComprasRecorrentes(params *utils.Parametros, usua
 
 	return
 }
+
+// ObterFaturaCartaoGeral obtém o id da fatura do cartão geral
+func (pg *DBRecorrentes) ObterFaturaCartaoGeral(usuarioID *uuid.UUID) (faturaID *uuid.UUID, err error) {
+	consulta := sq.StatementBuilder.RunWith(pg.DB).
+		Select("TFC.id").
+		From("t_fatura_cartao tfc").
+		Join("t_cartao TC ON TFC.FATURA_CARTAO_ID = TC.ID").
+		Where(sq.Eq{"usuario_id": usuarioID}).
+		Where("TO_CHAR(data_vencimento, 'MM/YYYY') = TO_CHAR(NOW()::DATE, 'MM/YYYY')").
+		Where("TC.nome = 'Cartão Geral'").
+		Where(sq.NotEq{"status": "Pago"}).
+		Where(`tfc.id NOT IN (
+			SELECT tcf.compra_fatura_id
+			FROM t_compras_fatura tcf
+			WHERE tcf.compra_fatura_id = tfc.id
+			AND tcf.recorrente )`).PlaceholderFormat(sq.Dollar)
+
+	if err = consulta.Scan(&faturaID); err != nil {
+		return
+	}
+
+	return
+}
+
+// CadastrarCompraRecorrente cadastra as compras recorrentes
+func (pg *DBRecorrentes) CadastrarCompraRecorrente(req *model.ComprasRecorrentes) (err error) {
+	if err = sq.StatementBuilder.RunWith(pg.DB).Insert("public.t_compras_fatura").
+		Columns("nome", "descricao", "local_compra", "compra_categoria_id", "valor_parcela", "parcela_atual", "qtd_parcelas", "compra_fatura_id", "data_compra", "recorrente").
+		Values(req.Nome, req.Descricao, req.LocalCompra, req.CategoriaID, req.ValorParcela, req.ParcelaAtual, req.QuantidadeParcelas, req.FaturaID, req.DataCompra, req.Recorrente).
+		Suffix(`RETURNING "id"`).
+		PlaceholderFormat(sq.Dollar).Scan(&req.ID); err != nil {
+		return err
+	}
+
+	return
+}

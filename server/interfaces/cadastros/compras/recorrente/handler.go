@@ -28,3 +28,16 @@ func listarComprasRecorrentes(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+// cadastrarComprasRecorrentes godoc
+func cadastrarComprasRecorrentes(c *gin.Context) {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := recorrente.CadastrarComprasRecorrentes(usuarioID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusCreated, nil)
+}
