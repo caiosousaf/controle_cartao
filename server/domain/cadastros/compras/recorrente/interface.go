@@ -11,4 +11,5 @@ type IRecorrente interface {
 	ListarComprasRecorrentes(params *utils.Parametros, usuarioID *uuid.UUID) (*model.RecorrentesPag, error)
 	ObterFaturaCartaoGeral(usuarioID *uuid.UUID) (*uuid.UUID, error)
 	CadastrarCompraRecorrente(req *model.ComprasRecorrentes) (err error)
+	ObterPrevisaoGastos(usuarioID *uuid.UUID) (gastos *model.PrevisaoGastosPag, err error)
 }

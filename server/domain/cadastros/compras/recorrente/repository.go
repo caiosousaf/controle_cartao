@@ -32,3 +32,8 @@ func (r *repo) ObterFaturaCartaoGeral(usuarioID *uuid.UUID) (faturaID *uuid.UUID
 func (r *repo) CadastrarCompraRecorrente(req *model.ComprasRecorrentes) (err error) {
 	return r.Data.CadastrarCompraRecorrente(req)
 }
+
+// ObterPrevisaoGastos é um gerenciador de fluxo para obter uma previsão de gastos
+func (r *repo) ObterPrevisaoGastos(usuarioID *uuid.UUID) (gastos *model.PrevisaoGastosPag, err error) {
+	return r.Data.ObterPrevisaoGastos(usuarioID)
+}

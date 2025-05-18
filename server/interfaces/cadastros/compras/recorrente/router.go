@@ -6,4 +6,5 @@ import "github.com/gin-gonic/gin"
 func Router(r *gin.RouterGroup) {
 	r.GET("", listarComprasRecorrentes)
 	r.POST("", cadastrarComprasRecorrentes)
+	r.GET("previsao", obterPrevisaoGastos)
 }

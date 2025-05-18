@@ -23,3 +23,14 @@ type ResRecorrentesPag struct {
 	Prox  *bool            `json:"prox,omitempty"`
 	Total *int64           `json:"total,omitempty"`
 }
+
+// ResPrevisaoGastos modela uma respota para previsão de gastos dos próximos meses
+type ResPrevisaoGastos struct {
+	MesAno string  `json:"mes_ano" apelido:"mes_ano"`
+	Valor  float64 `json:"valor" apelido:"valor"`
+}
+
+// ResPrevisaoGastosPag modela uma lista de resposta dos gastos previstos
+type ResPrevisaoGastosPag struct {
+	Dados []ResPrevisaoGastos `json:"dados,omitempty"`
+}

@@ -41,3 +41,17 @@ func cadastrarComprasRecorrentes(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, nil)
 }
+
+// obterPrevisaoGastos godoc
+func obterPrevisaoGastos(c *gin.Context) {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := recorrente.ObterPrevisaoGastos(usuarioID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}

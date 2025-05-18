@@ -38,3 +38,14 @@ type ComprasRecorrentes struct {
 	DataCompra         *string
 	Recorrente         bool
 }
+
+// PrevisaoGastos é a estrutura que define os dados para previsão de gastos dos próximos meses
+type PrevisaoGastos struct {
+	MesAno string  `apelido:"mes_ano"`
+	Valor  float64 `apelido:"valor"`
+}
+
+// PrevisaoGastosPag é a estrutura que define o modelo de retorno em forma de array dos gastos previstos
+type PrevisaoGastosPag struct {
+	Dados []PrevisaoGastos
+}
