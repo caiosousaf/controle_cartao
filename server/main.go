@@ -26,13 +26,22 @@ func main() {
 }
 
 func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*") // ✅ Permite qualquer origem
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+	allowedOrigins := map[string]bool{
+		"https://marvelous-haupia-7c28da.netlify.app": true,
+		"http://localhost:3000":                       true,
+	}
 
-		// ✅ Trata requisições OPTIONS (pré-flight)
+	return func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+
+		if allowedOrigins[origin] {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")
+			c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		}
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
