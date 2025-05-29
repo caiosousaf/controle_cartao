@@ -28,7 +28,7 @@ func main() {
 func CORSMiddleware() gin.HandlerFunc {
 	allowedOrigins := map[string]bool{
 		"https://kaleidoscopic-sfogliatella-b7f6c8.netlify.app":true,
-		"https://marvelous-haupia-7c28da.netlify.app": true,
+		"https://aesthetic-naiad-0d149d.netlify.app": true,
 		"http://localhost:3000":                       true,
 	}
 
