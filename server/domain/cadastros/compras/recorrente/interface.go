@@ -12,4 +12,9 @@ type IRecorrente interface {
 	ObterFaturaCartaoGeral(usuarioID *uuid.UUID) (*uuid.UUID, error)
 	CadastrarCompraRecorrente(req *model.ComprasRecorrentes) (err error)
 	ObterPrevisaoGastos(usuarioID *uuid.UUID) (gastos *model.PrevisaoGastosPag, err error)
+	CadastrarNovaCompraRecorrente(req *model.Recorrentes, usuarioID *uuid.UUID) (err error)
+	AtualizarCompraRecorrente(req *model.Recorrentes, usuarioID *uuid.UUID) (err error)
+	DesativarCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error)
+	ReativarCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error)
+	RemoverCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error)
 }

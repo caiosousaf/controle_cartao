@@ -139,3 +139,122 @@ func (pg *DBRecorrentes) CadastrarCompraRecorrente(req *model.ComprasRecorrentes
 
 	return
 }
+
+// CadastrarNovaCompraRecorrente cadastrar uma nova compra recorrente
+func (pg *DBRecorrentes) CadastrarNovaCompraRecorrente(req *model.Recorrentes, usuarioID *uuid.UUID) (err error) {
+	if _, err = sq.StatementBuilder.RunWith(pg.DB).Insert("public.t_compras_recorrente").
+		Columns("nome", "descricao", "compra_categoria_id", "local_compra", "valor_parcela", "usuario_id").
+		Values(req.Nome, req.Descricao, req.CategoriaID, req.LocalCompra, req.ValorParcela, usuarioID).
+		PlaceholderFormat(sq.Dollar).
+		Exec(); err != nil {
+		return err
+	}
+
+	return
+}
+
+// AtualizarCompraRecorrente atualiza uma compra recorrente
+func (pg *DBRecorrentes) AtualizarCompraRecorrente(req *model.Recorrentes, usuarioID *uuid.UUID) (err error) {
+	if _, err = sq.StatementBuilder.RunWith(pg.DB).Update("public.t_compras_recorrente").
+		Set("nome", req.Nome).
+		Set("descricao", req.Descricao).
+		Set("compra_categoria_id", req.CategoriaID).
+		Set("local_compra", req.LocalCompra).
+		Set("valor_parcela", req.ValorParcela).
+		Where(sq.Eq{
+			"id":         req.ID,
+			"usuario_id": usuarioID,
+			"ativo":      true,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec(); err != nil {
+		return err
+	}
+
+	return
+}
+
+// DesativarCompraRecorrente desativa uma compra recorrente
+func (pg *DBRecorrentes) DesativarCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error) {
+	result, err := sq.Update("public.t_compras_recorrente").
+		RunWith(pg.DB).
+		Set("ativo", false).
+		Where(sq.Eq{
+			"id":         recorrenteID,
+			"usuario_id": usuarioID,
+			"ativo":      true,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Compra recorrente não encontrada")
+	}
+
+	return
+}
+
+// ReativarCompraRecorrente reativa uma compra recorrente
+func (pg *DBRecorrentes) ReativarCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error) {
+	result, err := sq.Update("public.t_compras_recorrente").
+		RunWith(pg.DB).
+		Set("ativo", true).
+		Where(sq.Eq{
+			"id":         recorrenteID,
+			"usuario_id": usuarioID,
+			"ativo":      false,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Compra recorrente não encontrada")
+	}
+
+	return
+}
+
+// RemoverCompraRecorrente remove uma compra recorrente
+func (pg *DBRecorrentes) RemoverCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error) {
+	result, err := sq.Delete("public.t_compras_recorrente").
+		RunWith(pg.DB).
+		Where(sq.Eq{
+			"id":         recorrenteID,
+			"usuario_id": usuarioID,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewErr("Compra recorrente não encontrada")
+	}
+
+	return
+}

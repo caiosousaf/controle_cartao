@@ -123,3 +123,165 @@ func ObterPrevisaoGastos(usuarioID *uuid.UUID) (res *ResPrevisaoGastosPag, err e
 
 	return
 }
+
+// CadastrarNovaCompraRecorrente contém a regra de negócio para cadastrar uma nova compra recorrente
+func CadastrarNovaCompraRecorrente(req *Recorrentes, usuarioID *uuid.UUID) (err error) {
+	const msgErrPadrao = "Erro ao cadastrar uma nova compra recorrente"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer tx.Rollback()
+
+	repo := recorrente.NovoRepo(db)
+
+	var reqInfra = new(infra.Recorrentes)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = repo.CadastrarNovaCompraRecorrente(reqInfra, usuarioID); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}
+
+// AtualizarCompraRecorrente contém a regra de negócio para atualizar uma compra recorrente
+func AtualizarCompraRecorrente(req *Recorrentes, recorrenteID, usuarioID *uuid.UUID) (err error) {
+	const msgErrPadrao = "Erro ao cadastrar uma nova compra recorrente"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer tx.Rollback()
+
+	repo := recorrente.NovoRepo(db)
+
+	var reqInfra = new(infra.Recorrentes)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	reqInfra.ID = recorrenteID
+
+	if err = repo.AtualizarCompraRecorrente(reqInfra, usuarioID); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}
+
+// DesativarCompraRecorrente contém a regra de negócio para desativar uma compra recorrente
+func DesativarCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error) {
+	const msgErrPadrao = "Erro ao desativar compra recorrente"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	defer tx.Rollback()
+
+	repo := recorrente.NovoRepo(db)
+
+	if err = repo.DesativarCompraRecorrente(recorrenteID, usuarioID); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}
+
+// ReativarCompraRecorrente contém a regra de negócio para reativar uma compra recorrente
+func ReativarCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error) {
+	const msgErrPadrao = "Erro ao reativar compra recorrente"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	defer tx.Rollback()
+
+	repo := recorrente.NovoRepo(db)
+
+	if err = repo.ReativarCompraRecorrente(recorrenteID, usuarioID); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}
+
+// RemoverCompraRecorrente contém a regra de negócio para remover uma compra recorrente
+func RemoverCompraRecorrente(recorrenteID, usuarioID *uuid.UUID) (err error) {
+	const msgErrPadrao = "Erro ao remover compra recorrente"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	defer tx.Rollback()
+
+	repo := recorrente.NovoRepo(db)
+
+	if err = repo.RemoverCompraRecorrente(recorrenteID, usuarioID); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return
+}

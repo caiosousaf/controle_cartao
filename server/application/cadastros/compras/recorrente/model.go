@@ -34,3 +34,12 @@ type ResPrevisaoGastos struct {
 type ResPrevisaoGastosPag struct {
 	Dados []ResPrevisaoGastos `json:"dados,omitempty"`
 }
+
+// Recorrentes modela uma estrutura de requisição para cadastro de compras recorrentes
+type Recorrentes struct {
+	Nome         *string    `json:"nome" apelido:"nome"`
+	Descricao    *string    `json:"descricao" apelido:"descricao"`
+	CategoriaID  *uuid.UUID `json:"compra_categoria_id" apelido:"categoria_id"`
+	LocalCompra  *string    `json:"local_compra" apelido:"local_compra"`
+	ValorParcela *float64   `json:"valor_parcela" apelido:"valor_parcela"`
+}

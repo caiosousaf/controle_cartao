@@ -11,6 +11,7 @@ func Router(r *gin.RouterGroup) {
 	r.GET("total", obterTotalComprasValor)
 	r.GET("pdf", pdfComprasFaturaCartao)
 	recorrente.Router(r.Group("recorrente"))
+	recorrente.RouterWithID(r.Group("recorrente/:recorrente_id"))
 }
 
 // RouterInvoice é um router para as rotas de compras que não utilizam ID de compra mas utiliza ID da fatura
