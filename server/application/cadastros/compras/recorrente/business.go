@@ -61,6 +61,7 @@ func CadastrarComprasRecorrentes(usuarioID *uuid.UUID) (err error) {
 	repo := recorrente.NovoRepo(db)
 
 	params.Limite = utils.MaxLimit
+	params.AdicionarFiltro("ativo", "true")
 	comprasRecorrentes, err := repo.ListarComprasRecorrentes(params, usuarioID)
 	if err != nil {
 		return utils.Wrap(err, msgErrPadrao)
