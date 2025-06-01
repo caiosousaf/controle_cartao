@@ -84,13 +84,30 @@ func (pg *DBRecorrentes) ObterPrevisaoGastos(usuarioID *uuid.UUID) (gastos *mode
   		WHERE TC.usuario_id = $1
 ),
 recorrentes_expandido AS (
-  SELECT data_vencimento, valor_parcela FROM compras_base WHERE recorrente = FALSE
+  	SELECT data_vencimento, valor_parcela 
+  	FROM compras_base 
+  	WHERE recorrente = FALSE
+  
   UNION ALL
-  SELECT data_vencimento, valor_parcela FROM compras_base WHERE recorrente = TRUE
+  
+  	SELECT data_vencimento, valor_parcela 
+  	FROM compras_base 
+ 	WHERE recorrente = TRUE
+ 	AND TO_CHAR(data_vencimento, 'MM/YYYY') = TO_CHAR(NOW(), 'MM/YYYY')
+  
   UNION ALL
-  SELECT data_vencimento + INTERVAL '1 month', valor_parcela FROM compras_base WHERE recorrente = TRUE
+  
+	SELECT data_vencimento + INTERVAL '1 month', valor_parcela 
+	FROM compras_base 
+	WHERE recorrente = TRUE
+	AND TO_CHAR(data_vencimento, 'MM/YYYY') = TO_CHAR(NOW(), 'MM/YYYY')
+	
   UNION ALL
-  SELECT DATA_VENCIMENTO + INTERVAL '2 month', valor_parcela FROM compras_base WHERE recorrente = TRUE
+  
+  	SELECT DATA_VENCIMENTO + INTERVAL '2 month', valor_parcela 
+  	FROM compras_base 
+  	WHERE recorrente = TRUE
+  	AND TO_CHAR(data_vencimento, 'MM/YYYY') = TO_CHAR(NOW(), 'MM/YYYY')
 )
 	SELECT
   		TO_CHAR(data_vencimento, 'MM/YYYY') AS mes_ano,
