@@ -4,6 +4,7 @@ import (
 	model "controle_cartao/infrastructure/cadastros/usuarios"
 	"database/sql"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 )
 
 // DBUsuario é uma estrutura base para acesso aos metodos do banco postgresql
@@ -38,4 +39,19 @@ func (pg *DBUsuario) BuscarUsuario(email *string) (res *model.Usuario, err error
 	}
 
 	return
+}
+
+// AtualizarSenhaUsuario é responsável por atualizar a senha do usuário
+func (pg *DBUsuario) AtualizarSenhaUsuario(novaSenha *string, usuarioID *uuid.UUID) error {
+	if _, err := sq.StatementBuilder.RunWith(pg.DB).Update("public.t_usuarios").
+		Set("senha", novaSenha).
+		Where(sq.Eq{
+			"id": usuarioID,
+		}).
+		PlaceholderFormat(sq.Dollar).
+		Exec(); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"controle_cartao/infrastructure/cadastros/usuarios"
 	"controle_cartao/infrastructure/cadastros/usuarios/postgres"
 	"database/sql"
+	"github.com/google/uuid"
 )
 
 type repo struct {
@@ -22,4 +23,9 @@ func (r *repo) CadastrarUsuario(req *usuarios.Usuario) error {
 // BuscarUsuario é um gerenciador de fluxo de dados para buscar um usuário no banco de dados
 func (r *repo) BuscarUsuario(email *string) (*usuarios.Usuario, error) {
 	return r.Data.BuscarUsuario(email)
+}
+
+// AtualizarSenhaUsuario é um gerenciador de fluxo de dados para atualizar a senha do usuário
+func (r *repo) AtualizarSenhaUsuario(novaSenha *string, usuarioID *uuid.UUID) error {
+	return r.Data.AtualizarSenhaUsuario(novaSenha, usuarioID)
 }

@@ -26,3 +26,10 @@ type ReqUsuarioLogin struct {
 	Email *string `json:"email" apelido:"email" binding:"required"`
 	Senha *string `json:"senha" apelido:"senha" binding:"required"`
 }
+
+// ReqAlterarSenhaUsuario modela uma estrutura para alterar a senha de um usuário
+type ReqAlterarSenhaUsuario struct {
+	Email      *string `json:"email" binding:"required"`
+	SenhaAtual *string `json:"senha_atual" binding:"required"`
+	SenhaNova  *string `json:"senha_nova" binding:"required"`
+}

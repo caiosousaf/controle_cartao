@@ -6,6 +6,7 @@ import (
 	infra "controle_cartao/infrastructure/cadastros/usuarios"
 	"controle_cartao/middlewares"
 	"controle_cartao/utils"
+	"github.com/google/uuid"
 )
 
 // CadastrarUsuario contém a regra de negócio para cadastro de um novo usuário
@@ -23,6 +24,9 @@ func CadastrarUsuario(req *ReqUsuario) (res *ResCadastroUsuario, err error) {
 	repo := usuarios.NovoRepo(db)
 
 	req.Senha, err = middlewares.HashSenha(req.Senha)
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
 
 	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
 		return res, utils.Wrap(err, msgErrPadrao)
@@ -74,6 +78,54 @@ func LoginUsuario(req *ReqUsuarioLogin) (res *Res, err error) {
 
 	res = &Res{
 		Token: token,
+	}
+
+	return
+}
+
+// AtualizarSenhaUsuario contém a regra de negócio para atualizar a senha do usuárioo
+func AtualizarSenhaUsuario(req *ReqAlterarSenhaUsuario, usuarioID *uuid.UUID) (err error) {
+	const (
+		msgErrPadrao      = "Erro ao atualizar senha"
+		msgErrCredenciais = "Credenciais inválidas"
+		msgErrSenhaAtual  = "Senha atual inválida"
+	)
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	defer tx.Rollback()
+
+	repo := usuarios.NovoRepo(db)
+
+	usuario, err := repo.BuscarUsuario(req.Email)
+	if err != nil {
+		return utils.NewErr(msgErrCredenciais)
+	}
+
+	if ok := middlewares.VerificarSenha(*req.SenhaAtual, *usuario.Senha); ok != true {
+		return utils.NewErr(msgErrSenhaAtual)
+	}
+
+	req.SenhaNova, err = middlewares.HashSenha(req.SenhaNova)
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err := repo.AtualizarSenhaUsuario(req.SenhaNova, usuarioID); err != nil {
+		return utils.NewErr(msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
 	}
 
 	return

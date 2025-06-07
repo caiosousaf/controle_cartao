@@ -2,11 +2,12 @@ package usuarios
 
 import (
 	"controle_cartao/application/usuarios"
+	"controle_cartao/middlewares"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-// cadastrarUsuario
+// cadastrarUsuario godoc
 func cadastrarUsuario(c *gin.Context) {
 	var req usuarios.ReqUsuario
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -25,7 +26,7 @@ func cadastrarUsuario(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
-// login
+// login godoc
 func login(c *gin.Context) {
 	var req usuarios.ReqUsuarioLogin
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,4 +43,25 @@ func login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+// atualizarSenhaUsuario godoc
+func atualizarSenhaUsuario(c *gin.Context) {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	var req usuarios.ReqAlterarSenhaUsuario
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	if err := usuarios.AtualizarSenhaUsuario(&req, usuarioID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }

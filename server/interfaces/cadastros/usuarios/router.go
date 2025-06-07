@@ -4,6 +4,7 @@ import "github.com/gin-gonic/gin"
 
 func Router(r *gin.RouterGroup) {
 	r.POST("", cadastrarUsuario)
+	r.PUT("alterar/senha", atualizarSenhaUsuario)
 }
 
 func RouterLogin(r *gin.RouterGroup) {

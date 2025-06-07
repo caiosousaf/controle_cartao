@@ -56,7 +56,7 @@ func obterPrevisaoGastos(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// cadastrarNovaCompraRecorrente
+// cadastrarNovaCompraRecorrente godoc
 func cadastrarNovaCompraRecorrente(c *gin.Context) {
 	usuarioID := middlewares.AuthUsuario(c)
 
@@ -77,7 +77,7 @@ func cadastrarNovaCompraRecorrente(c *gin.Context) {
 	c.JSON(http.StatusCreated, nil)
 }
 
-// atualizarCompraRecorrente
+// atualizarCompraRecorrente godoc
 func atualizarCompraRecorrente(c *gin.Context) {
 	usuarioID := middlewares.AuthUsuario(c)
 
