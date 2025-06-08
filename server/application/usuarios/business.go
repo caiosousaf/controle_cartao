@@ -62,7 +62,7 @@ func LoginUsuario(req *ReqUsuarioLogin) (res *Res, err error) {
 
 	repo := usuarios.NovoRepo(db)
 
-	usuario, err := repo.BuscarUsuario(req.Email)
+	usuario, err := repo.BuscarUsuarioLogin(req.Email)
 	if err != nil {
 		return res, utils.NewErr(msgErrIdentificarUsuario)
 	}
@@ -78,6 +78,32 @@ func LoginUsuario(req *ReqUsuarioLogin) (res *Res, err error) {
 
 	res = &Res{
 		Token: token,
+	}
+
+	return
+}
+
+// BuscarUsuario contém a regra de negócio para buscar os dados de usuário
+func BuscarUsuario(usuarioID *uuid.UUID) (res *ResUsuario, err error) {
+	const msgErrPadrao = "Erro ao buscar dados de usuário"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return res, utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	repo := usuarios.NovoRepo(db)
+
+	dados, err := repo.BuscarUsuario(usuarioID)
+	if err != nil {
+		return res, utils.NewErr(msgErrPadrao)
+	}
+
+	res = &ResUsuario{
+		Nome:        dados.Nome,
+		Email:       dados.Email,
+		DataCriacao: dados.DataCriacao,
 	}
 
 	return
@@ -106,7 +132,7 @@ func AtualizarSenhaUsuario(req *ReqAlterarSenhaUsuario, usuarioID *uuid.UUID) (e
 
 	repo := usuarios.NovoRepo(db)
 
-	usuario, err := repo.BuscarUsuario(req.Email)
+	usuario, err := repo.BuscarUsuarioLogin(req.Email)
 	if err != nil {
 		return utils.NewErr(msgErrCredenciais)
 	}
@@ -120,7 +146,7 @@ func AtualizarSenhaUsuario(req *ReqAlterarSenhaUsuario, usuarioID *uuid.UUID) (e
 		return utils.Wrap(err, msgErrPadrao)
 	}
 
-	if err := repo.AtualizarSenhaUsuario(req.SenhaNova, usuarioID); err != nil {
+	if err := repo.AtualizarSenhaUsuario(req.SenhaNova, req.EmailNovo, usuarioID); err != nil {
 		return utils.NewErr(msgErrPadrao)
 	}
 

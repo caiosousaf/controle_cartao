@@ -8,6 +8,7 @@ import (
 // IUsuario define uma interface para os metodos de acesso a camada de dados
 type IUsuario interface {
 	CadastrarUsuario(req *usuarios.Usuario) error
-	BuscarUsuario(nome *string) (*usuarios.Usuario, error)
-	AtualizarSenhaUsuario(novaSenha *string, usuarioID *uuid.UUID) error
+	BuscarUsuarioLogin(nome *string) (*usuarios.Usuario, error)
+	AtualizarSenhaUsuario(novaSenha, email *string, usuarioID *uuid.UUID) error
+	BuscarUsuario(usuarioID *uuid.UUID) (res *usuarios.Usuario, err error)
 }

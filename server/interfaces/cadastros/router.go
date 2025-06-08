@@ -18,4 +18,5 @@ func Router(r *gin.RouterGroup) {
 	categorias.Router(r.Group("categorias"))
 	categorias.RouterWithID(r.Group("categoria/:categoria_id"))
 	usuarios.Router(r.Group("usuarios"))
+	usuarios.RouterWithID(r.Group("usuario"))
 }

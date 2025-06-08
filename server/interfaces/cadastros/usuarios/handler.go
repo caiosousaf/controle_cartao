@@ -65,3 +65,17 @@ func atualizarSenhaUsuario(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+
+// buscarUsuario godoc
+func buscarUsuario(c *gin.Context) {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	res, err := usuarios.BuscarUsuario(usuarioID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}

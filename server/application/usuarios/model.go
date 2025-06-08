@@ -1,6 +1,9 @@
 package usuarios
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 // ReqUsuario modela uma estrutura para a criação de um usuário
 type ReqUsuario struct {
@@ -30,6 +33,14 @@ type ReqUsuarioLogin struct {
 // ReqAlterarSenhaUsuario modela uma estrutura para alterar a senha de um usuário
 type ReqAlterarSenhaUsuario struct {
 	Email      *string `json:"email" binding:"required"`
+	EmailNovo  *string `json:"email_novo" binding:"required"`
 	SenhaAtual *string `json:"senha_atual" binding:"required"`
 	SenhaNova  *string `json:"senha_nova" binding:"required"`
+}
+
+// ResUsuario modela uma estrutura de resposta com os dados de usuário
+type ResUsuario struct {
+	Nome        *string    `json:"nome" apelido:"nome"`
+	Email       *string    `json:"email" apelido:"email"`
+	DataCriacao *time.Time `json:"data_criacao" apelido:"data_criacao"`
 }
