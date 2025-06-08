@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Router é um router para gerenciamento das rotas de cadastros
+// Router é um router para gestão das rotas de cadastros
 func Router(r *gin.RouterGroup) {
 	cartao.Router(r.Group("cartoes"))
 	cartao.RouterWithID(r.Group("cartao/:cartao_id"))
@@ -18,4 +18,5 @@ func Router(r *gin.RouterGroup) {
 	categorias.Router(r.Group("categorias"))
 	categorias.RouterWithID(r.Group("categoria/:categoria_id"))
 	usuarios.Router(r.Group("usuarios"))
+	usuarios.RouterWithID(r.Group("usuario"))
 }
