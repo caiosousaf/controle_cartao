@@ -4,7 +4,6 @@ import (
 	model "controle_cartao/infrastructure/cadastros/compras"
 	"controle_cartao/utils"
 	"database/sql"
-
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 )
@@ -17,8 +16,8 @@ type DBCompra struct {
 // CadastrarCompra cadastra uma nova compra no banco de dados
 func (pg *DBCompra) CadastrarCompra(req *model.Compras) (err error) {
 	if err = sq.StatementBuilder.RunWith(pg.DB).Insert("public.t_compras_fatura").
-		Columns("nome", "descricao", "local_compra", "compra_categoria_id", "valor_parcela", "parcela_atual", "qtd_parcelas", "compra_fatura_id", "data_compra").
-		Values(req.Nome, req.Descricao, req.LocalCompra, req.CategoriaID, req.ValorParcela, req.ParcelaAtual, req.QuantidadeParcelas, req.FaturaID, req.DataCompra).
+		Columns("nome", "descricao", "local_compra", "compra_categoria_id", "valor_parcela", "parcela_atual", "qtd_parcelas", "agrupamento_id", "compra_fatura_id", "data_compra").
+		Values(req.Nome, req.Descricao, req.LocalCompra, req.CategoriaID, req.ValorParcela, req.ParcelaAtual, req.QuantidadeParcelas, req.AgrupamentoID, req.FaturaID, req.DataCompra).
 		Suffix(`RETURNING "id"`).
 		PlaceholderFormat(sq.Dollar).Scan(&req.ID); err != nil {
 		return err
@@ -90,6 +89,106 @@ func (pg *DBCompra) ObterTotalComprasValor(params *utils.Parametros, usuarioID *
 	if err = consultaComFiltro.
 		Scan(&res.Total); err != nil {
 		return res, err
+	}
+
+	return
+}
+
+// AtualizarCompra atualiza todas as compras de um agrupamento
+func (pg *DBCompra) AtualizarCompra(req *model.Compras, usuarioID, compraID *uuid.UUID, recorrente, atualizarTodasParcelas bool) error {
+	queryAgrupamento := `
+		agrupamento_id IN (
+			SELECT TCF.agrupamento_id
+			FROM t_compras_fatura TCF
+			JOIN t_fatura_cartao TFC ON TFC.id = TCF.compra_fatura_id
+			JOIN t_cartao TC ON TC.id = TFC.fatura_cartao_id
+			WHERE TC.usuario_id = ?
+			AND TCF.id = ?)
+	`
+
+	query := sq.
+		Update("public.t_compras_fatura").
+		Set("nome", req.Nome).
+		Set("descricao", req.Descricao).
+		Set("local_compra", req.LocalCompra).
+		Set("compra_categoria_id", req.CategoriaID).
+		Set("valor_parcela", req.ValorParcela).
+		Set("data_compra", req.DataCompra).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pg.DB)
+
+	if recorrente || !atualizarTodasParcelas {
+		query = query.Where(sq.Eq{"id": compraID})
+	} else {
+		query = query.Where(sq.Expr(queryAgrupamento, usuarioID.String(), compraID.String()))
+	}
+
+	row, err := query.Exec()
+	if err != nil {
+		return err
+	}
+
+	affected, err := row.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return utils.NewErr("compra não encontrada")
+	}
+
+	return err
+}
+
+// RemoverCompra remove todas as compras de um agrupamento
+func (pg *DBCompra) RemoverCompra(compraID, usuarioID *uuid.UUID, recorrente, removerTodasParcelas bool) error {
+	queryAgrupamento := `agrupamento_id IN (
+			SELECT TCF.agrupamento_id
+			FROM t_compras_fatura TCF
+			JOIN t_fatura_cartao TFC ON TFC.id = TCF.compra_fatura_id
+			JOIN t_cartao TC ON TC.id = TFC.fatura_cartao_id
+			WHERE TC.usuario_id = ?
+			AND TCF.id = ?)`
+
+	query := sq.
+		Delete("public.t_compras_fatura").
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pg.DB)
+
+	if recorrente || !removerTodasParcelas {
+		query = query.Where(sq.Eq{"id": compraID})
+	} else {
+		query = query.Where(sq.Expr(queryAgrupamento, usuarioID.String(), compraID.String()))
+	}
+
+	row, err := query.Exec()
+	if err != nil {
+		return err
+	}
+
+	affected, err := row.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return utils.NewErr("compra não encontrada")
+	}
+
+	return err
+}
+
+// VerificaCompraRecorrente verifica se a compra é recorrente ou não
+func (pg *DBCompra) VerificaCompraRecorrente(compraID *uuid.UUID) (recorrente *bool, err error) {
+	query := sq.Select("recorrente").
+		From("t_compras_fatura").
+		Where(sq.Eq{"id": compraID}).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pg.DB).
+		QueryRow()
+
+	if err = query.Scan(&recorrente); err != nil {
+		return recorrente, err
 	}
 
 	return

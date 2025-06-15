@@ -33,3 +33,18 @@ func (r *repo) ListarCompras(params *utils.Parametros, usuarioID *uuid.UUID) (*c
 func (r *repo) ObterTotalComprasValor(params *utils.Parametros, usuarioID *uuid.UUID) (*compras.TotalComprasValor, error) {
 	return r.Data.ObterTotalComprasValor(params, usuarioID)
 }
+
+// AtualizarCompra é um gerenciador de fluxo de dados para atualizar compras
+func (r *repo) AtualizarCompra(req *compras.Compras, usuarioID, compraID *uuid.UUID, recorrente, atualizarTodasParcelas bool) error {
+	return r.Data.AtualizarCompra(req, usuarioID, compraID, recorrente, atualizarTodasParcelas)
+}
+
+// RemoverCompra é um gerenciador de fluxo de dados para remover uma compra
+func (r *repo) RemoverCompra(compraID, usuarioID *uuid.UUID, recorrente, removerTodasParcelas bool) error {
+	return r.Data.RemoverCompra(compraID, usuarioID, recorrente, removerTodasParcelas)
+}
+
+// VerificaCompraRecorrente é um gerenciador de fluxo de dados para verificar compra recorrente ou não
+func (r *repo) VerificaCompraRecorrente(compraID *uuid.UUID) (recorrente *bool, err error) {
+	return r.Data.VerificaCompraRecorrente(compraID)
+}

@@ -14,6 +14,12 @@ func Router(r *gin.RouterGroup) {
 	recorrente.RouterWithID(r.Group("recorrente/:recorrente_id"))
 }
 
+// RouterWithID é um router para as rotas de compras que utilizam id
+func RouterWithID(r *gin.RouterGroup) {
+	r.PUT(":remover_todas_parcelas", atualizarCompras)
+	r.DELETE(":remover_todas_parcelas", removerCompra)
+}
+
 // RouterInvoice é um router para as rotas de compras que não utilizam ID de compra mas utiliza ID da fatura
 func RouterInvoice(r *gin.RouterGroup) {
 	r.POST("", cadastrarCompra)

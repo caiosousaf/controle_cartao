@@ -24,6 +24,8 @@ type Compras struct {
 	FaturaID           *uuid.UUID `alias:"TCF" sql:"compra_fatura_id" apelido:"fatura_id"`
 	NomeFatura         *string    `alias:"TFC" sql:"nome" apelido:"fatura_nome"`
 	DataCompra         *string    `alias:"TCF" sql:"data_compra" apelido:"data_compra"`
+	Recorrente         *bool      `alias:"TCF" sql:"recorrente"`
+	AgrupamentoID      *uuid.UUID `alias:"TCF" sql:"agrupamento_id" apelido:"agrupamento_id"`
 	DataCriacao        *time.Time `alias:"TCF" sql:"data_criacao" apelido:"data_criacao"`
 }
 

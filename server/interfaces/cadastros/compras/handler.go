@@ -6,6 +6,7 @@ import (
 	"controle_cartao/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 // cadastrarCompra godoc
@@ -53,6 +54,68 @@ func listarCompras(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+// atualizarCompras
+func atualizarCompras(c *gin.Context) {
+	var req compras.Req
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	usuarioID := middlewares.AuthUsuario(c)
+
+	compraID, err := utils.GetUUIDFromParam(c, "compra_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	atualizarTodasParcelas, err := strconv.ParseBool(c.Param("remover_todas_parcelas"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	if err := compras.AtualizarCompras(&req, usuarioID, compraID, atualizarTodasParcelas); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// removerCompra
+func removerCompra(c *gin.Context) {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	compraID, err := utils.GetUUIDFromParam(c, "compra_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	removerTodasParcelas, err := strconv.ParseBool(c.Param("remover_todas_parcelas"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	if err := compras.RemoverCompra(compraID, usuarioID, removerTodasParcelas); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // pdfComprasFaturaCartao godoc

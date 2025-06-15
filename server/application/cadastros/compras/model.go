@@ -15,6 +15,7 @@ type Req struct {
 	ParcelaAtual       *int64     `json:"parcela_atual" apelido:"parcela_atual"`
 	QuantidadeParcelas *int64     `json:"quantidade_parcelas" apelido:"quantidade_parcelas"`
 	FaturaID           *uuid.UUID `json:"fatura_id" apelido:"fatura_id"`
+	AgrupamentoID      *uuid.UUID `json:"-" apelido:"agrupamento_id"`
 	DataCompra         *string    `json:"data_compra" apelido:"data_compra"`
 }
 
@@ -39,6 +40,8 @@ type ResCompras struct {
 	FaturaID           *uuid.UUID `json:"fatura_id" apelido:"fatura_id"`
 	NomeFatura         *string    `json:"nome_fatura" apelido:"fatura_nome"`
 	DataCompra         *string    `json:"data_compra" apelido:"data_compra"`
+	Recorrente         *bool      `json:"recorrente" apelido:"recorrente"`
+	AgrupamentoID      *uuid.UUID `json:"agrupamento_id,omitempty" apelido:"agrupamento_id"`
 	DataCriacao        *time.Time `json:"data_criacao" apelido:"data_criacao"`
 }
 

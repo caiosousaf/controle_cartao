@@ -73,6 +73,8 @@ func CadastrarCompra(req *Req, idFatura, usuarioID *uuid.UUID) (idCompra *uuid.U
 		return idCompra, utils.NewErr("Data da compra deve ser menor que a data de vencimento da fatura")
 	}
 
+	reqInfra.AgrupamentoID = utils.GetPointer(uuid.New())
+
 	datas, meses, idCartao, err := repoFatura.ObterProximasFaturas(req.ParcelaAtual, req.QuantidadeParcelas, idFatura)
 	if err != nil {
 		return idCompra, utils.Wrap(err, msgErrProxFaturas)
@@ -172,6 +174,80 @@ func ObterTotalComprasValor(params *utils.Parametros, usuarioID *uuid.UUID) (res
 	res = &ResTotalComprasValor{Total: totalCompras.Total}
 
 	return
+}
+
+// AtualizarCompras contém a regra de negócio para atualizar compras
+func AtualizarCompras(req *Req, usuarioID, compraID *uuid.UUID, atualizarTodasParcelas bool) (err error) {
+	const msgErrPadrao = "Erro ao atualizar compras"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer tx.Rollback()
+
+	repo := compras.NovoRepo(db)
+
+	var reqInfra = new(infra.Compras)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	recorrente, err := repo.VerificaCompraRecorrente(compraID)
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = repo.AtualizarCompra(reqInfra, usuarioID, compraID, *recorrente, atualizarTodasParcelas); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return nil
+}
+
+// RemoverCompra contém a regra de negócio para remover compras
+func RemoverCompra(compraID, usuarioID *uuid.UUID, removerTodasParcelas bool) error {
+	const msgErrPadrao = "Erro ao remover compra"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer tx.Rollback()
+
+	repo := compras.NovoRepo(db)
+
+	recorrente, err := repo.VerificaCompraRecorrente(compraID)
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = repo.RemoverCompra(compraID, usuarioID, *recorrente, removerTodasParcelas); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return nil
 }
 
 func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf *gofpdf.Fpdf, err error) {
