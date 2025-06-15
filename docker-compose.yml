@@ -26,3 +26,10 @@ services:
       - TOKEN=${TOKEN}
     env_file:
       - .env
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.front
+    ports:
+      - "80:80"
