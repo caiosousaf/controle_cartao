@@ -75,7 +75,7 @@ func atualizarCompras(c *gin.Context) {
 		return
 	}
 
-	atualizarTodasParcelas, err := strconv.ParseBool(c.Param("remover_todas_parcelas"))
+	atualizarTodasParcelas, err := strconv.ParseBool(c.Param("atualizar_todas_parcelas"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()

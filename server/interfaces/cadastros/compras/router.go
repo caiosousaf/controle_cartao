@@ -16,7 +16,7 @@ func Router(r *gin.RouterGroup) {
 
 // RouterWithID é um router para as rotas de compras que utilizam id
 func RouterWithID(r *gin.RouterGroup) {
-	r.PUT(":remover_todas_parcelas", atualizarCompras)
+	r.PUT(":atualizar_todas_parcelas", atualizarCompras)
 	r.DELETE(":remover_todas_parcelas", removerCompra)
 }
 
