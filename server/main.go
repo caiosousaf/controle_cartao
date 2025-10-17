@@ -30,6 +30,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		"https://kaleidoscopic-sfogliatella-b7f6c8.netlify.app":true,
 		"https://aesthetic-naiad-0d149d.netlify.app": true,
 		"http://localhost:3000":                       true,
+		"https://credit-card-manageme-v9mg.bolt.host": true,
 	}
 
 	return func(c *gin.Context) {
