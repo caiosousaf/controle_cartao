@@ -73,6 +73,7 @@ func (pg *DBCompra) ObterTotalComprasValor(params *utils.Parametros, usuarioID *
 		From("public.t_compras_fatura TCF").
 		Join("public.t_fatura_cartao TFC ON TFC.id = TCF.compra_fatura_id").
 		Join("public.t_cartao TC ON TC.id = TFC.fatura_cartao_id").
+		Join("public.t_categoria_compra TCC ON TCF.compra_categoria_id = TCC.id").
 		Where(sq.Eq{
 			"TC.usuario_id": usuarioID,
 		})
@@ -80,6 +81,7 @@ func (pg *DBCompra) ObterTotalComprasValor(params *utils.Parametros, usuarioID *
 	consultaComFiltro := params.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"cartao_id":       utils.CriarFiltros("TC.id = ?::UUID", utils.FlagFiltroEq),
 		"fatura_id":       utils.CriarFiltros("TFC.id = ?::UUID", utils.FlagFiltroEq),
+		"categoria_id":    utils.CriarFiltros("TCC.id = ?::UUID", utils.FlagFiltroEq),
 		"data_especifica": utils.CriarFiltros("TO_CHAR(TFC.data_vencimento, 'MM/YYYY') = ?", utils.FlagFiltroEq),
 		"ultima_parcela":  utils.CriarFiltros("(TCF.parcela_atual = TCF.qtd_parcelas) = ?::BOOLEAN", utils.FlagFiltroEq),
 		"pago":            utils.CriarFiltros("(TFC.status <> 'Pago') = ?::BOOLEAN", utils.FlagFiltroEq),
