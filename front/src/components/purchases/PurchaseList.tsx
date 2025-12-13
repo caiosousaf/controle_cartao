@@ -23,6 +23,7 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ invoiceId }) => {
     if (invoiceId) {
       // Initial load
       fetchPurchasesByInvoiceId(invoiceId, pageSize, 0);
+      setPage(1);
     }
   }, [invoiceId]);
 
@@ -31,6 +32,14 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ invoiceId }) => {
       const nextPage = page + 1;
       fetchPurchasesByInvoiceId(invoiceId, pageSize, (nextPage - 1) * pageSize);
       setPage(nextPage);
+    }
+  };
+
+  const handlePurchaseUpdated = () => {
+    if (invoiceId) {
+      // Refresh the list
+      fetchPurchasesByInvoiceId(invoiceId, pageSize, 0);
+      setPage(1);
     }
   };
   
@@ -81,6 +90,7 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ invoiceId }) => {
             <PurchaseItem 
               key={purchase.id} 
               purchase={purchase}
+              onPurchaseUpdated={handlePurchaseUpdated}
             />
           ))}
         </div>

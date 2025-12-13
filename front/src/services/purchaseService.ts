@@ -13,6 +13,15 @@ interface CreatePurchaseData {
   data_compra: string;
 }
 
+interface UpdatePurchaseData {
+  nome?: string;
+  descricao?: string;
+  local_compra?: string;
+  categoria_id?: string;
+  valor_parcela?: number;
+  data_compra?: string;
+}
+
 export const purchaseService = {
   getPurchasesByInvoiceId: async (
     invoiceId: string,
@@ -61,6 +70,24 @@ export const purchaseService = {
       await api.post(`/cadastros/fatura/${invoiceId}/compras`, data);
     } catch (error) {
       console.error('Error creating purchase:', error);
+      throw error;
+    }
+  },
+
+  updatePurchase: async (purchaseId: string, updateAllInstallments: boolean, data: UpdatePurchaseData): Promise<void> => {
+    try {
+      await api.put(`/cadastros/compra/${purchaseId}/${updateAllInstallments}`, data);
+    } catch (error) {
+      console.error('Error updating purchase:', error);
+      throw error;
+    }
+  },
+
+  deletePurchase: async (purchaseId: string, removeAllInstallments: boolean): Promise<void> => {
+    try {
+      await api.delete(`/cadastros/compra/${purchaseId}/${removeAllInstallments}`);
+    } catch (error) {
+      console.error('Error deleting purchase:', error);
       throw error;
     }
   },

@@ -12,6 +12,7 @@ interface InvoiceContextType {
   totalInvoices: number;
   fetchInvoicesByCardId: (cardId: string, limit?: number, offset?: number, pago?: boolean) => Promise<void>;
   selectInvoice: (invoice: Invoice) => void;
+  updateSelectedInvoice: (updatedInvoice: Invoice) => void;
   clearSelectedInvoice: () => void;
   clearInvoices: () => void;
   clearError: () => void;
@@ -73,6 +74,14 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     setSelectedInvoice(invoice);
   };
 
+  const updateSelectedInvoice = (updatedInvoice: Invoice) => {
+    setSelectedInvoice(updatedInvoice);
+    // Also update in the invoices list if it exists
+    setInvoices(prev => prev.map(invoice => 
+      invoice.id === updatedInvoice.id ? updatedInvoice : invoice
+    ));
+  };
+
   const clearSelectedInvoice = () => {
     setSelectedInvoice(null);
   };
@@ -94,6 +103,7 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     totalInvoices,
     fetchInvoicesByCardId,
     selectInvoice,
+    updateSelectedInvoice,
     clearSelectedInvoice,
     clearInvoices,
     clearError
