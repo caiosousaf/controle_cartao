@@ -21,7 +21,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ cardId }) => {
   const [page, setPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'pending'>('all');
-  const pageSize = 30;
+  const pageSize = 10;
   const navigate = useNavigate();
   
   useEffect(() => {
