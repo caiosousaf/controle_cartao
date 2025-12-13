@@ -17,7 +17,7 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ invoiceId }) => {
     fetchPurchasesByInvoiceId 
   } = usePurchases();
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 30;
   
   useEffect(() => {
     if (invoiceId) {
