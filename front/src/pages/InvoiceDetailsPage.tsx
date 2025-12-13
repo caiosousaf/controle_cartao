@@ -9,11 +9,12 @@ import { ArrowLeft, Receipt, Calendar, Check, Clock, Plus } from "lucide-react";
 
 const InvoiceDetailsPage: React.FC = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
-  const { invoices, selectedInvoice, selectInvoice } = useInvoices();
+  const { invoices, selectedInvoice, selectInvoice, updateSelectedInvoice } = useInvoices();
   const { clearPurchases, fetchPurchasesByInvoiceId } = usePurchases();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!invoiceId) {
@@ -72,16 +73,17 @@ const InvoiceDetailsPage: React.FC = () => {
   const handlePurchaseCreated = () => {
     if (invoiceId) {
       fetchPurchasesByInvoiceId(invoiceId);
+      setRefreshKey(prev => prev + 1);
     }
   };
 
   const handleInvoicePaid = () => {
-    if (invoiceId) {
-      // Refresh the invoice data
-      const invoice = invoices.find((i) => i.id === invoiceId);
-      if (invoice) {
-        selectInvoice({ ...invoice, status: "Pago" });
-      }
+    if (selectedInvoice) {
+      // Update the invoice status locally
+      const updatedInvoice = { ...selectedInvoice, status: "Pago" };
+      updateSelectedInvoice(updatedInvoice);
+      // Force refresh of purchases list
+      setRefreshKey(prev => prev + 1);
     }
   };
 
@@ -169,7 +171,7 @@ const InvoiceDetailsPage: React.FC = () => {
 
       {invoiceId && (
         <>
-          <PurchaseList invoiceId={invoiceId} />
+          <PurchaseList key={refreshKey} invoiceId={invoiceId} />
           {selectedInvoice && (
             <>
               <CreatePurchaseModal

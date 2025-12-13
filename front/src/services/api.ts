@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'https://controlecartao-ppm0j41q.b4a.run';
+const baseURL = 'https://controle-cartao.fly.dev';
 
 const api = axios.create({
   baseURL,
