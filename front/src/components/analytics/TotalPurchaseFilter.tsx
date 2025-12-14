@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePurchases } from '../../context/PurchaseContext';
 import { PurchaseFilters } from '../../types/purchase';
-import { Calendar, DollarSign, Check } from 'lucide-react';
+import { Category } from '../../types/category';
+import { categoryService } from '../../services/categoryService';
+import { Calendar, DollarSign, Check, Tag } from 'lucide-react';
 
 const TotalPurchaseFilter: React.FC = () => {
   const { isLoading, error, totalAmount, fetchTotalPurchases } = usePurchases();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [filters, setFilters] = useState<PurchaseFilters>({});
   
+  // Busca categorias ao carregar o componente
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryService.getCategories(100000, 0, false, true);
+      setCategories(response.dados);
+    } catch (err) {
+      console.error('Erro ao carregar categorias', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await fetchTotalPurchases(filters);
@@ -18,9 +35,11 @@ const TotalPurchaseFilter: React.FC = () => {
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFilters(prev => ({ ...prev, [name]: checked }));
-    } else if (name === 'dataEspecifica') {
+    } 
+    else if (name === 'dataEspecifica' || name === 'categoria_id') {
       setFilters(prev => ({ ...prev, [name]: value || undefined }));
-    } else {
+    }
+    else {
       const booleanValue = value === 'true' ? true : value === 'false' ? false : undefined;
       setFilters(prev => ({ ...prev, [name]: booleanValue }));
     }
@@ -39,7 +58,7 @@ const TotalPurchaseFilter: React.FC = () => {
       )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label htmlFor="dataEspecifica" className="block text-sm font-medium text-gray-700 mb-1">
               Mês/Ano
@@ -57,6 +76,31 @@ const TotalPurchaseFilter: React.FC = () => {
                 onChange={handleChange}
                 value={filters.dataEspecifica || ''}
               />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="categoria_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Categoria
+            </label>
+            <div className="relative mt-1 rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Tag className="h-5 w-5 text-gray-400" />
+              </div>
+              <select
+                id="categoria_id"
+                name="categoria_id"
+                className="block w-full pl-10 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                onChange={handleChange}
+                value={filters.categoria_id || ''}
+              >
+                <option value="">Todas</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.nome}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           

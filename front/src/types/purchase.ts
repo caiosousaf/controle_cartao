@@ -28,4 +28,5 @@ export interface PurchaseFilters {
   dataEspecifica?: string;
   ultimaParcela?: boolean;
   pago?: boolean;
+  categoria_id?: string;
 }
