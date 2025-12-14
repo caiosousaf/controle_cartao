@@ -4,8 +4,11 @@ import (
 	"controle_cartao/interfaces/cadastros"
 	"controle_cartao/interfaces/cadastros/usuarios"
 	"controle_cartao/middlewares"
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -26,11 +29,14 @@ func main() {
 }
 
 func CORSMiddleware() gin.HandlerFunc {
-	allowedOrigins := map[string]bool{
-		"https://kaleidoscopic-sfogliatella-b7f6c8.netlify.app":true,
-		"https://aesthetic-naiad-0d149d.netlify.app": true,
-		"http://localhost:3000":                       true,
-		"https://credit-card-manageme-v9mg.bolt.host": true,
+	allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
+	allowedOrigins := make(map[string]bool)
+
+	if allowedOriginsStr != "" {
+		origins := strings.Split(allowedOriginsStr, ",")
+		for _, origin := range origins {
+			allowedOrigins[strings.TrimSpace(origin)] = true
+		}
 	}
 
 	return func(c *gin.Context) {
