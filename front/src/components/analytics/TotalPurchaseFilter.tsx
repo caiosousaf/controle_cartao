@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePurchases } from '../../context/PurchaseContext';
 import { PurchaseFilters } from '../../types/purchase';
-import { Calendar, DollarSign, Check } from 'lucide-react';
+import { Calendar, DollarSign, Check, Tag } from 'lucide-react';
+import { categoryService } from '../../services/categoryService';
+import { Category } from '../../types/category';
 
 const TotalPurchaseFilter: React.FC = () => {
   const { isLoading, error, totalAmount, fetchTotalPurchases } = usePurchases();
   const [filters, setFilters] = useState<PurchaseFilters>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await categoryService.getCategories(100000, 0, false, true);
+        setCategories(response.dados);
+      } catch (err) {
+        console.error('Erro ao carregar categorias para o filtro', err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +38,7 @@ const TotalPurchaseFilter: React.FC = () => {
       setFilters(prev => ({ ...prev, [name]: value || undefined }));
     } else {
       const booleanValue = value === 'true' ? true : value === 'false' ? false : undefined;
-      setFilters(prev => ({ ...prev, [name]: booleanValue }));
+      setFilters(prev => ({ ...prev, [name]: booleanValue !== undefined ? booleanValue : value || undefined }));
     }
   };
 
@@ -39,7 +55,7 @@ const TotalPurchaseFilter: React.FC = () => {
       )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label htmlFor="dataEspecifica" className="block text-sm font-medium text-gray-700 mb-1">
               Mês/Ano
@@ -57,6 +73,31 @@ const TotalPurchaseFilter: React.FC = () => {
                 onChange={handleChange}
                 value={filters.dataEspecifica || ''}
               />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="categoria_id" className="block text-sm font-medium text-gray-700 mb-1">
+              Categoria
+            </label>
+            <div className="relative mt-1 rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Tag className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                id="categoria_id"
+                name="categoria_id"
+                className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                onChange={handleChange}
+                value={filters.categoria_id ? String(filters.categoria_id) : ''}
+                >
+                <option value="">Todas as Categorias</option>
+                {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                    {category.nome}
+                    </option>
+                ))}
+                </select>
             </div>
           </div>
           

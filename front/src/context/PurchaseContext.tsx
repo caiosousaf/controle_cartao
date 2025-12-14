@@ -78,7 +78,8 @@ export const PurchaseProvider: React.FC<{ children: ReactNode }> = ({ children }
       const response = await purchaseService.getTotalPurchases(
         filters?.dataEspecifica,
         filters?.ultimaParcela,
-        filters?.pago
+        filters?.pago,
+        filters?.categoria_id
       );
       
       setTotalAmount(response.total);
