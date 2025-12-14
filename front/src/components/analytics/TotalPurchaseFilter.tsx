@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'; // Adicionado useEffect
+import React, { useState, useEffect } from 'react';
 import { usePurchases } from '../../context/PurchaseContext';
 import { PurchaseFilters } from '../../types/purchase';
-import { Calendar, DollarSign, Check, Tag } from 'lucide-react'; // Adicionei o ícone Tag opcionalmente
-import { categoryService } from '../../services/categoryService'; // Import do serviço
-import { Category } from '../../types/category'; // Import do tipo
+import { Calendar, DollarSign, Check, Tag } from 'lucide-react';
+import { categoryService } from '../../services/categoryService';
+import { Category } from '../../types/category';
 
 const TotalPurchaseFilter: React.FC = () => {
   const { isLoading, error, totalAmount, fetchTotalPurchases } = usePurchases();
