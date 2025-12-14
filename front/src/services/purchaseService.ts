@@ -48,7 +48,8 @@ export const purchaseService = {
   getTotalPurchases: async (
     dataEspecifica?: string,
     ultimaParcela?: boolean,
-    pago?: boolean
+    pago?: boolean,
+    categoria_id?: string
   ): Promise<TotalPurchaseResponse> => {
     try {
       const params = new URLSearchParams();
@@ -56,6 +57,7 @@ export const purchaseService = {
       if (dataEspecifica) params.append('data_especifica', dataEspecifica);
       if (ultimaParcela !== undefined) params.append('ultima_parcela', ultimaParcela.toString());
       if (pago !== undefined) params.append('pago', pago.toString());
+      if (categoria_id) params.append('categoria_id', categoria_id);
       
       const response = await api.get<TotalPurchaseResponse>('/cadastros/compras/total', { params });
       return response.data;
