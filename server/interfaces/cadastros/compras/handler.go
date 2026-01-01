@@ -142,12 +142,10 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 
 	// Gera o PDF e escreve no contexto de resposta
 	if err = pdf.Output(c.Writer); err != nil {
-		c.JSON(http.StatusInternalServerError, "Erro ao gerar PDF")
+		c.JSON(http.StatusInternalServerError, err)
 		c.Abort()
 		return
 	}
-
-	c.JSON(http.StatusOK, "PDF gerado com sucesso")
 }
 
 // obterTotalComprasValor godoc

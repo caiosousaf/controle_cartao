@@ -304,11 +304,8 @@ func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf
 				return pdf, utils.Wrap(err, msgErrPadrao)
 			}
 
-			totalFatura[j] = *valor.Total
-			totalFloat, err := strconv.ParseFloat(*valor.Total, 64)
-			if err != nil {
-				return pdf, utils.Wrap(err, "Não foi possível converter valor")
-			}
+			totalFloat, _ := strconv.ParseFloat(*valor.Total, 64)
+			totalFatura[j] = fmt.Sprintf("%.2f", totalFloat)
 
 			total += totalFloat
 
@@ -370,8 +367,11 @@ func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 
 // tabelaFaturasPdf é a função responsável por montar o pdf com as faturas e suas compras
 func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, valorTotalFatura *string, tamanho, altura float64) {
-	left := float64(40)
+	if listaCompras == nil || len(listaCompras.Dados) == 0 {
+		return
+	}
 
+	left := float64(40)
 	leftTitulo := float64(90)
 	pdf.SetX(leftTitulo)
 
@@ -427,6 +427,10 @@ func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, valorTot
 
 // tabelaMesesFaturasCartao
 func tabelaMesesFaturasCartao(pdf *gofpdf.Fpdf, listaFaturas *infraFaturas.FaturaPag, tamanho, altura float64, totalFatura []string, total float64) {
+	if listaFaturas == nil || len(listaFaturas.Dados) == 0 {
+		return
+	}
+
 	var (
 		leftMeses = float64(71)
 		left      = float64(83)
@@ -465,7 +469,7 @@ func tabelaMesesFaturasCartao(pdf *gofpdf.Fpdf, listaFaturas *infraFaturas.Fatur
 
 	pdf.SetX(leftMeses)
 	pdf.CellFormat(tamanho*2, altura, "Valor total", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(tamanho, altura, strconv.FormatFloat(total, 'f', -1, 64), "1", 0, "C", true, 0, "")
+	pdf.CellFormat(tamanho, altura, fmt.Sprintf("%.2f", total), "1", 0, "C", true, 0, "")
 
 	pdf.Ln(-1)
 	pdf.Ln(-1)
