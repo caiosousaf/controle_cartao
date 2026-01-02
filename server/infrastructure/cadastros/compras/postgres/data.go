@@ -4,6 +4,7 @@ import (
 	model "controle_cartao/infrastructure/cadastros/compras"
 	"controle_cartao/utils"
 	"database/sql"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 )
@@ -194,4 +195,75 @@ func (pg *DBCompra) VerificaCompraRecorrente(compraID *uuid.UUID) (recorrente *b
 	}
 
 	return
+}
+
+// AnteciparParcelas antecipa as parcelas de uma compra especifica para a fatura escolhida
+func (pg *DBCompra) AnteciparParcelas(req *model.ReqAntecipacaoParcelas, faturaID, usuarioID *uuid.UUID) error {
+	subQuery := sq.
+		Select("f.ID").
+		From("T_FATURA_CARTAO f").
+		Join("T_CARTAO c ON f.FATURA_CARTAO_ID = c.ID").
+		Where(sq.Eq{"c.usuario_id": usuarioID})
+
+	query := sq.
+		Update("public.t_compras_fatura").
+		Set("compra_fatura_id", faturaID).
+		Where(sq.Eq{
+			"agrupamento_id": req.IdentificadorCompra,
+			"parcela_atual":  req.Parcelas,
+		}).
+		Where(sq.Expr("compra_fatura_id IN (?)", subQuery)).
+		PlaceholderFormat(sq.Dollar)
+
+	row, err := query.RunWith(pg.DB).Exec()
+	if err != nil {
+		return fmt.Errorf("erro ao antecipar parcelas no banco: %w", err)
+	}
+
+	affected, err := row.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return utils.NewErr("parcela não encontrada")
+	}
+
+	return nil
+}
+
+// ObterParcelasDisponiveisAntecipacao obtém as parcelas disponiveis para antecipação
+func (pg *DBCompra) ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID *uuid.UUID) ([]int64, error) {
+	dataVencimentoDestino := sq.Select("data_vencimento").
+		From("t_fatura_cartao").
+		Where(sq.Eq{"id": faturaID})
+
+	query := sq.Select("comp.parcela_atual").
+		From("t_compras_fatura comp").
+		Join("t_fatura_cartao fat ON comp.compra_fatura_id = fat.id").
+		Join("t_cartao cart ON fat.fatura_cartao_id = cart.id").
+		Where(sq.Eq{
+			"comp.agrupamento_id": identificadorCompra,
+			"cart.usuario_id":     usuarioID,
+		}).
+		Where(sq.Expr("fat.data_vencimento > (?)", dataVencimentoDestino)).
+		OrderBy("comp.parcela_atual ASC").
+		PlaceholderFormat(sq.Dollar)
+
+	rows, err := query.RunWith(pg.DB).Query()
+	if err != nil {
+		return nil, fmt.Errorf("erro ao listar números de parcelas: %w", err)
+	}
+	defer rows.Close()
+
+	var parcelas = make([]int64, 0)
+	for rows.Next() {
+		var numero int64
+		if err := rows.Scan(&numero); err != nil {
+			return nil, err
+		}
+		parcelas = append(parcelas, numero)
+	}
+
+	return parcelas, nil
 }

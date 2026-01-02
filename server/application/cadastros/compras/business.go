@@ -250,6 +250,83 @@ func RemoverCompra(compraID, usuarioID *uuid.UUID, removerTodasParcelas bool) er
 	return nil
 }
 
+// AntecipacaoParcelas contém a regra de negócio para antecipar parcelas
+func AntecipacaoParcelas(req *ReqAntecipacaoParcelas, faturaID, usuarioID *uuid.UUID) error {
+	const msgErrPadrao = "Erro ao antecipar parcelas"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer tx.Rollback()
+
+	repo := compras.NovoRepo(db)
+
+	parcelasDisponiveis, err := repo.ObterParcelasDisponiveisAntecipacao(req.IdentificadorCompra, faturaID, usuarioID)
+	if err != nil {
+		return utils.Wrap(err, "Não foi possível validar as parcelas disponíveis")
+	}
+
+	var parcelasValidadas []int64
+	mapDisponiveis := make(map[int64]bool)
+
+	for _, p := range parcelasDisponiveis {
+		mapDisponiveis[p] = true
+	}
+
+	for _, pSolicitada := range req.Parcelas {
+		if mapDisponiveis[pSolicitada] {
+			parcelasValidadas = append(parcelasValidadas, pSolicitada)
+		}
+	}
+
+	if len(parcelasValidadas) == 0 {
+		return utils.NewErr("Nenhuma das parcelas selecionadas está disponível para antecipação nesta fatura")
+	}
+
+	var reqInfra = new(infra.ReqAntecipacaoParcelas)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err := repo.AnteciparParcelas(reqInfra, faturaID, usuarioID); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return nil
+}
+
+// ObterParcelasDisponiveisAntecipacao contém a regra de negócio para obter as parcelas disponiveis para antencipação
+func ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID *uuid.UUID) ([]int64, error) {
+	const msgErrPadrao = "Erro ao obter o total das compras"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return []int64{}, err
+	}
+	defer db.Close()
+
+	repo := compras.NovoRepo(db)
+
+	parcelasDisponiveis, err := repo.ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID)
+	if err != nil {
+		return parcelasDisponiveis, utils.Wrap(err, msgErrPadrao)
+	}
+
+	return parcelasDisponiveis, nil
+}
+
 func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf *gofpdf.Fpdf, err error) {
 	const (
 		tamanhoCel   = float64(18)

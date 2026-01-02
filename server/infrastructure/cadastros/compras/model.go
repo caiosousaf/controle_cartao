@@ -10,6 +10,12 @@ type TotalComprasValor struct {
 	Total *string `alias:"TCF" sql:"valor_parcela" apelido:"valor_total"`
 }
 
+// ReqAntecipacaoParcelas estrutura para definição de modelo para antecipação de parcelas
+type ReqAntecipacaoParcelas struct {
+	Parcelas            []int64    `apelido:"parcelas"`
+	IdentificadorCompra *uuid.UUID `apelido:"identificador_compra"`
+}
+
 // Compras estrutura para definição de modelo de compra para uso na camada de dados
 type Compras struct {
 	ID                 *uuid.UUID `alias:"TCF" sql:"id" apelido:"id"`

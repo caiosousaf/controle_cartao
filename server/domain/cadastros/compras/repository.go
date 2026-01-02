@@ -48,3 +48,13 @@ func (r *repo) RemoverCompra(compraID, usuarioID *uuid.UUID, recorrente, remover
 func (r *repo) VerificaCompraRecorrente(compraID *uuid.UUID) (recorrente *bool, err error) {
 	return r.Data.VerificaCompraRecorrente(compraID)
 }
+
+// AnteciparParcelas é um gerenciador de fluxo de dados para antecipação de parcelas de uma compra especifica para uma fatura
+func (r *repo) AnteciparParcelas(req *compras.ReqAntecipacaoParcelas, faturaID, usuarioID *uuid.UUID) error {
+	return r.Data.AnteciparParcelas(req, faturaID, usuarioID)
+}
+
+// ObterParcelasDisponiveisAntecipacao é um gerenciador de fluxo de dados para obter as parcelas disponiveis para antecipação
+func (r *repo) ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID *uuid.UUID) ([]int64, error) {
+	return r.Data.ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID)
+}

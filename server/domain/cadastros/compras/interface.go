@@ -15,4 +15,6 @@ type ICompra interface {
 	AtualizarCompra(req *compras.Compras, usuarioID, compraID *uuid.UUID, recorrente, atualizarTodasParcelas bool) error
 	RemoverCompra(compraID, usuarioID *uuid.UUID, recorrente, removerTodasParcelas bool) error
 	VerificaCompraRecorrente(compraID *uuid.UUID) (recorrente *bool, err error)
+	AnteciparParcelas(req *compras.ReqAntecipacaoParcelas, faturaID, usuarioID *uuid.UUID) error
+	ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID *uuid.UUID) ([]int64, error)
 }
