@@ -37,6 +37,61 @@ func cadastrarCompra(c *gin.Context) {
 	c.JSON(http.StatusCreated, idCompra)
 }
 
+// antecipacaoParcelas godoc
+func antecipacaoParcelas(c *gin.Context) {
+	var req compras.ReqAntecipacaoParcelas
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	idFatura, err := utils.GetUUIDFromParam(c, "fatura_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	usuarioID := middlewares.AuthUsuario(c)
+
+	if err := compras.AntecipacaoParcelas(&req, idFatura, usuarioID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// obterParcelasDisponiveisAntecipacao
+func obterParcelasDisponiveisAntecipacao(c *gin.Context) {
+	usuarioID := middlewares.AuthUsuario(c)
+
+	identificadorCompra, err := utils.GetUUIDFromParam(c, "identificador_compra")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	faturaID, err := utils.GetUUIDFromParam(c, "fatura_id")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	res, err := compras.ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
 // listarCompras godoc
 func listarCompras(c *gin.Context) {
 	params, err := utils.ParseParams(c)
@@ -142,12 +197,10 @@ func pdfComprasFaturaCartao(c *gin.Context) {
 
 	// Gera o PDF e escreve no contexto de resposta
 	if err = pdf.Output(c.Writer); err != nil {
-		c.JSON(http.StatusInternalServerError, "Erro ao gerar PDF")
+		c.JSON(http.StatusInternalServerError, err)
 		c.Abort()
 		return
 	}
-
-	c.JSON(http.StatusOK, "PDF gerado com sucesso")
 }
 
 // obterTotalComprasValor godoc

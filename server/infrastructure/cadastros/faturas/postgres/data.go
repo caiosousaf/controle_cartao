@@ -33,7 +33,7 @@ func (pg *DBFatura) ListarFaturasCartao(p *utils.Parametros, id, usuarioID *uuid
 			"TFC.fatura_cartao_id": id,
 			"TC.data_desativacao":  nil,
 			"TC.usuario_id":        usuarioID,
-		}).OrderBy("TFC.data_criacao")
+		})
 
 	consultaComFiltro := p.CriarFiltros(consultaSql, map[string]utils.Filtro{
 		"nome_exato": utils.CriarFiltros("LOWER(TF.nome) = LOWER(?)", utils.FlagFiltroEq),

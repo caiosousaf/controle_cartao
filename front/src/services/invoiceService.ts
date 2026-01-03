@@ -16,6 +16,7 @@ export const invoiceService = {
       if (offset) params.append('offset', offset.toString());
       if (getTotal) params.append('total', 'true');
       if (pago !== undefined) params.append('pago', pago.toString());
+      params.append('order', 'data_vencimento');
       
       const response = await api.get<InvoiceResponse>(
         `/cadastros/cartao/${cardId}/faturas`, 

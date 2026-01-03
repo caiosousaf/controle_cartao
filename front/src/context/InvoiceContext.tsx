@@ -40,17 +40,14 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
       const response = await invoiceService.getInvoicesByCardId(cardId, limit, offset, false, pago);
       
       if (offset === 0) {
-        setInvoices(response.dados);
+        setInvoices(response.dados || []);
+        // Fetch total count if it's the first page
+        fetchTotalInvoices(cardId, pago);
       } else {
-        setInvoices(prev => [...prev, ...response.dados]);
+        setInvoices(prev => [...prev, ...(response.dados || [])]);
       }
       
       setHasMore(response.prox || false);
-      
-      // Fetch total count if it's the first page
-      if (offset === 0) {
-        fetchTotalInvoices(cardId, pago);
-      }
     } catch (err) {
       setError('Erro ao carregar faturas');
       console.error(`Error fetching invoices for card ${cardId}:`, err);
@@ -64,9 +61,13 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     
     try {
       const response = await invoiceService.getInvoicesByCardId(cardId, 1, 0, true, pago);
-      setTotalInvoices(response.total || 0);
+      // Ensure we set the total, defaulting to 0 if not present
+      const total = response.total !== undefined ? response.total : 0;
+      setTotalInvoices(total);
     } catch (err) {
       console.error(`Error fetching total invoices count for card ${cardId}:`, err);
+      // Reset total to 0 on error to prevent stale data
+      setTotalInvoices(0);
     }
   };
 

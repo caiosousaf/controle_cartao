@@ -93,4 +93,26 @@ export const purchaseService = {
       throw error;
     }
   },
+
+  getAvailableInstallments: async (invoiceId: string, purchaseGroupId: string): Promise<number[]> => {
+    try {
+      const response = await api.get<number[]>(`/cadastros/fatura/${invoiceId}/compras/antecipar/${purchaseGroupId}/parcelas`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching available installments:', error);
+      throw error;
+    }
+  },
+
+  anticipateInstallments: async (invoiceId: string, parcelas: number[], identificadorCompra: string): Promise<void> => {
+    try {
+      await api.put(`/cadastros/fatura/${invoiceId}/compras/antecipar`, {
+        parcelas,
+        identificador_compra: identificadorCompra
+      });
+    } catch (error) {
+      console.error('Error anticipating installments:', error);
+      throw error;
+    }
+  },
 };

@@ -250,6 +250,83 @@ func RemoverCompra(compraID, usuarioID *uuid.UUID, removerTodasParcelas bool) er
 	return nil
 }
 
+// AntecipacaoParcelas contém a regra de negócio para antecipar parcelas
+func AntecipacaoParcelas(req *ReqAntecipacaoParcelas, faturaID, usuarioID *uuid.UUID) error {
+	const msgErrPadrao = "Erro ao antecipar parcelas"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+	defer tx.Rollback()
+
+	repo := compras.NovoRepo(db)
+
+	parcelasDisponiveis, err := repo.ObterParcelasDisponiveisAntecipacao(req.IdentificadorCompra, faturaID, usuarioID)
+	if err != nil {
+		return utils.Wrap(err, "Não foi possível validar as parcelas disponíveis")
+	}
+
+	var parcelasValidadas []int64
+	mapDisponiveis := make(map[int64]bool)
+
+	for _, p := range parcelasDisponiveis {
+		mapDisponiveis[p] = true
+	}
+
+	for _, pSolicitada := range req.Parcelas {
+		if mapDisponiveis[pSolicitada] {
+			parcelasValidadas = append(parcelasValidadas, pSolicitada)
+		}
+	}
+
+	if len(parcelasValidadas) == 0 {
+		return utils.NewErr("Nenhuma das parcelas selecionadas está disponível para antecipação nesta fatura")
+	}
+
+	var reqInfra = new(infra.ReqAntecipacaoParcelas)
+
+	if err = utils.ConvertStructByAlias(req, reqInfra); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err := repo.AnteciparParcelas(reqInfra, faturaID, usuarioID); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return utils.Wrap(err, msgErrPadrao)
+	}
+
+	return nil
+}
+
+// ObterParcelasDisponiveisAntecipacao contém a regra de negócio para obter as parcelas disponiveis para antencipação
+func ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID *uuid.UUID) ([]int64, error) {
+	const msgErrPadrao = "Erro ao obter o total das compras"
+
+	db, err := database.Conectar()
+	if err != nil {
+		return []int64{}, err
+	}
+	defer db.Close()
+
+	repo := compras.NovoRepo(db)
+
+	parcelasDisponiveis, err := repo.ObterParcelasDisponiveisAntecipacao(identificadorCompra, faturaID, usuarioID)
+	if err != nil {
+		return parcelasDisponiveis, utils.Wrap(err, msgErrPadrao)
+	}
+
+	return parcelasDisponiveis, nil
+}
+
 func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf *gofpdf.Fpdf, err error) {
 	const (
 		tamanhoCel   = float64(18)
@@ -304,11 +381,8 @@ func PdfComprasFaturaCartao(params *utils.Parametros, usuarioID *uuid.UUID) (pdf
 				return pdf, utils.Wrap(err, msgErrPadrao)
 			}
 
-			totalFatura[j] = *valor.Total
-			totalFloat, err := strconv.ParseFloat(*valor.Total, 64)
-			if err != nil {
-				return pdf, utils.Wrap(err, "Não foi possível converter valor")
-			}
+			totalFloat, _ := strconv.ParseFloat(*valor.Total, 64)
+			totalFatura[j] = fmt.Sprintf("%.2f", totalFloat)
 
 			total += totalFloat
 
@@ -370,8 +444,11 @@ func gerarPdf() (pdf *gofpdf.Fpdf, err error) {
 
 // tabelaFaturasPdf é a função responsável por montar o pdf com as faturas e suas compras
 func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, valorTotalFatura *string, tamanho, altura float64) {
-	left := float64(40)
+	if listaCompras == nil || len(listaCompras.Dados) == 0 {
+		return
+	}
 
+	left := float64(40)
 	leftTitulo := float64(90)
 	pdf.SetX(leftTitulo)
 
@@ -427,6 +504,10 @@ func tabelaFaturasPdf(pdf *gofpdf.Fpdf, listaCompras *infra.ComprasPag, valorTot
 
 // tabelaMesesFaturasCartao
 func tabelaMesesFaturasCartao(pdf *gofpdf.Fpdf, listaFaturas *infraFaturas.FaturaPag, tamanho, altura float64, totalFatura []string, total float64) {
+	if listaFaturas == nil || len(listaFaturas.Dados) == 0 {
+		return
+	}
+
 	var (
 		leftMeses = float64(71)
 		left      = float64(83)
@@ -465,7 +546,7 @@ func tabelaMesesFaturasCartao(pdf *gofpdf.Fpdf, listaFaturas *infraFaturas.Fatur
 
 	pdf.SetX(leftMeses)
 	pdf.CellFormat(tamanho*2, altura, "Valor total", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(tamanho, altura, strconv.FormatFloat(total, 'f', -1, 64), "1", 0, "C", true, 0, "")
+	pdf.CellFormat(tamanho, altura, fmt.Sprintf("%.2f", total), "1", 0, "C", true, 0, "")
 
 	pdf.Ln(-1)
 	pdf.Ln(-1)

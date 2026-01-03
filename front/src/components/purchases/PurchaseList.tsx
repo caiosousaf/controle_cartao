@@ -90,6 +90,7 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ invoiceId }) => {
             <PurchaseItem 
               key={purchase.id} 
               purchase={purchase}
+              invoiceId={invoiceId}
               onPurchaseUpdated={handlePurchaseUpdated}
             />
           ))}

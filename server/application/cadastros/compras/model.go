@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+var (
+	// colunasFaturasPdf é a variavel que define as colunas que serão usadas no retorno do pdf da tabela de faturas
+	colunasFaturasPdf = []string{"Nome", "Local Compra", "Categoria", "Valor Parcela", "Parcela Atual", "Quantidade Parcelas", "Data Compra"}
+	// colunasMesesFaturasCartao é a variavel que define as colunas que serão usadas no retorno do pdf para a tabela com os meses das faturas de um cartão
+	colunasMesesFaturasCartao = []string{"Nome", "Status", "Total"}
+)
+
 // Req modela uma requisição para a criação de uma compra
 type Req struct {
 	Nome               *string    `json:"nome" apelido:"nome"`
@@ -19,12 +26,11 @@ type Req struct {
 	DataCompra         *string    `json:"data_compra" apelido:"data_compra"`
 }
 
-var (
-	// colunasFaturasPdf é a variavel que define as colunas que serão usadas no retorno do pdf da tabela de faturas
-	colunasFaturasPdf = []string{"Nome", "Local Compra", "Categoria", "Valor Parcela", "Parcela Atual", "Quantidade Parcelas", "Data Compra"}
-	// colunasMesesFaturasCartao é a variavel que define as colunas que serão usadas no retorno do pdf para a tabela com os meses das faturas de um cartão
-	colunasMesesFaturasCartao = []string{"Nome", "Status", "Total"}
-)
+// ReqAntecipacaoParcelas modela estrutura de requisição para antecipação de parcelas
+type ReqAntecipacaoParcelas struct {
+	Parcelas            []int64    `json:"parcelas" apelido:"parcelas"`
+	IdentificadorCompra *uuid.UUID `json:"identificador_compra" apelido:"identificador_compra"`
+}
 
 // ResCompras modela uma resposta para listagem e busca de compras
 type ResCompras struct {
