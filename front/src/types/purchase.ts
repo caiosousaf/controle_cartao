@@ -12,6 +12,7 @@ export interface Purchase {
   nome_fatura?: string;
   data_compra?: string;
   data_criacao?: string;
+  agrupamento_id?: string;
 }
 
 export interface PurchaseResponse {

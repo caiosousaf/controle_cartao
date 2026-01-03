@@ -34,17 +34,27 @@ const RecurringPurchasesPage: React.FC = () => {
       
       if (offset === 0) {
         setPurchases(response.dados || []);
+        // Fetch total count if it's the first page
+        fetchTotalRecurringPurchases();
       } else {
         setPurchases(prev => [...prev, ...(response.dados || [])]);
       }
       
       setHasMore(response.prox || false);
-      setTotalPurchases(response.total || 0);
     } catch (err) {
       setError('Erro ao carregar compras recorrentes');
       console.error('Error fetching recurring purchases:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchTotalRecurringPurchases = async () => {
+    try {
+      const response = await recurringService.getRecurringPurchases(1, 0, true);
+      setTotalPurchases(response.total || 0);
+    } catch (err) {
+      console.error('Error fetching total recurring purchases count:', err);
     }
   };
 

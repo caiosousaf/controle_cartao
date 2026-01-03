@@ -1,17 +1,27 @@
 import React, { useState } from "react";
 import { Purchase } from "../../types/purchase";
-import { ShoppingCart, MapPin, Tag, Calendar, Edit, Trash2 } from "lucide-react";
+import { ShoppingCart, MapPin, Tag, Calendar, Edit, Trash2, Clock } from "lucide-react";
 import EditPurchaseModal from "./EditPurchaseModal";
 import DeletePurchaseModal from "./DeletePurchaseModal";
+import AnticipatePurchaseModal from "./AnticipatePurchaseModal";
 
 interface PurchaseItemProps {
   purchase: Purchase;
+  invoiceId: string;
   onPurchaseUpdated: () => void;
 }
 
-const PurchaseItem: React.FC<PurchaseItemProps> = ({ purchase, onPurchaseUpdated }) => {
+const PurchaseItem: React.FC<PurchaseItemProps> = ({ purchase, invoiceId, onPurchaseUpdated }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAnticipateModalOpen, setIsAnticipateModalOpen] = useState(false);
+
+  // Verifica se é possível antecipar parcelas
+  const canAnticipate = 
+    purchase.quantidade_parcelas !== undefined &&
+    purchase.quantidade_parcelas > 1 &&
+    purchase.parcela_atual !== undefined &&
+    purchase.parcela_atual < purchase.quantidade_parcelas;
 
   return (
     <>
@@ -77,6 +87,24 @@ const PurchaseItem: React.FC<PurchaseItemProps> = ({ purchase, onPurchaseUpdated
                 <Edit className="h-4 w-4" />
               </button>
               <button
+                onClick={() => canAnticipate && setIsAnticipateModalOpen(true)}
+                disabled={!canAnticipate}
+                className={`p-1 transition-colors ${
+                  canAnticipate
+                    ? 'text-gray-500 hover:text-purple-600 cursor-pointer'
+                    : 'text-gray-300 cursor-not-allowed opacity-50'
+                }`}
+                title={
+                  canAnticipate
+                    ? 'Antecipar parcelas'
+                    : purchase.quantidade_parcelas === 1
+                    ? 'Antecipação disponível apenas para compras parceladas'
+                    : 'Não é possível antecipar a última parcela'
+                }
+              >
+                <Clock className="h-4 w-4" />
+              </button>
+              <button
                 onClick={() => setIsDeleteModalOpen(true)}
                 className="p-1 text-gray-500 hover:text-red-600 transition-colors"
                 title="Remover compra"
@@ -100,6 +128,14 @@ const PurchaseItem: React.FC<PurchaseItemProps> = ({ purchase, onPurchaseUpdated
         onClose={() => setIsDeleteModalOpen(false)}
         purchase={purchase}
         onPurchaseDeleted={onPurchaseUpdated}
+      />
+
+      <AnticipatePurchaseModal
+        isOpen={isAnticipateModalOpen}
+        onClose={() => setIsAnticipateModalOpen(false)}
+        purchase={purchase}
+        invoiceId={invoiceId}
+        onPurchaseUpdated={onPurchaseUpdated}
       />
     </>
   );
