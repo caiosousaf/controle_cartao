@@ -43,13 +43,13 @@ const TotalPurchaseFilter: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800">Total de Compras</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Total de Compras</h2>
       </div>
       
       {error && (
-        <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+        <div className="p-4 text-sm text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800" role="alert">
           {error}
         </div>
       )}
@@ -57,19 +57,19 @@ const TotalPurchaseFilter: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <label htmlFor="dataEspecifica" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="dataEspecifica" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Mês/Ano
             </label>
             <div className="relative mt-1 rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Calendar className="h-5 w-5 text-gray-400" />
+                <Calendar className="h-5 w-5 text-gray-400 dark:text-gray-500" />
               </div>
               <input
                 type="text"
                 name="dataEspecifica"
                 id="dataEspecifica"
                 placeholder="MM/AAAA"
-                className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md"
                 onChange={handleChange}
                 value={filters.dataEspecifica || ''}
               />
@@ -77,17 +77,17 @@ const TotalPurchaseFilter: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="categoria_id" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="categoria_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Categoria
             </label>
             <div className="relative mt-1 rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Tag className="h-5 w-5 text-gray-400" />
+                    <Tag className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                 </div>
                 <select
                 id="categoria_id"
                 name="categoria_id"
-                className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md"
                 onChange={handleChange}
                 value={filters.categoria_id ? String(filters.categoria_id) : ''}
                 >
@@ -102,13 +102,13 @@ const TotalPurchaseFilter: React.FC = () => {
           </div>
           
           <div>
-            <label htmlFor="ultimaParcela" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="ultimaParcela" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Última Parcela
             </label>
             <select
               id="ultimaParcela"
               name="ultimaParcela"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               onChange={handleChange}
               value={filters.ultimaParcela !== undefined ? String(filters.ultimaParcela) : ''}
             >
@@ -119,13 +119,13 @@ const TotalPurchaseFilter: React.FC = () => {
           </div>
           
           <div>
-            <label htmlFor="pago" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="pago" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Status de Pagamento
             </label>
             <select
               id="pago"
               name="pago"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               onChange={handleChange}
               value={filters.pago !== undefined ? String(filters.pago) : ''}
             >
@@ -148,13 +148,13 @@ const TotalPurchaseFilter: React.FC = () => {
       </form>
       
       {totalAmount && (
-        <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+        <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
           <div className="flex items-center">
-            <DollarSign className="h-8 w-8 text-green-500 mr-3" />
+            <DollarSign className="h-8 w-8 text-green-500 dark:text-green-400 mr-3" />
             <div>
-              <h3 className="text-lg font-medium text-green-800">Total de Compras</h3>
-              <p className="text-2xl font-bold text-green-600">{totalAmount}</p>
-              <p className="text-sm text-green-700 mt-1">
+              <h3 className="text-lg font-medium text-green-800 dark:text-green-300">Total de Compras</h3>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{totalAmount}</p>
+              <p className="text-sm text-green-700 dark:text-green-400 mt-1">
                 <Check className="h-4 w-4 inline mr-1" />
                 Cálculo concluído com base nos filtros selecionados
               </p>

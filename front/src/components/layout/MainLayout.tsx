@@ -1,5 +1,5 @@
 import React, { ReactNode, useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   CreditCard, 
@@ -12,7 +12,9 @@ import {
   RepeatIcon,
   Moon,
   Sun,
-  Tag
+  Tag,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface MainLayoutProps {
@@ -22,7 +24,12 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === 'true';
+  });
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
       return document.documentElement.classList.contains('dark');
@@ -62,163 +69,304 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setIsDark(!isDark);
   };
 
+  const toggleSidebarCollapse = () => {
+    const newState = !sidebarCollapsed;
+    setSidebarCollapsed(newState);
+    localStorage.setItem('sidebarCollapsed', newState.toString());
+  };
+
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex">
-              <button
-                type="button"
-                className="p-2 rounded-md text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 md:hidden"
-                onClick={toggleSidebar}
-              >
-                <span className="sr-only">Open sidebar</span>
-                <Menu className="h-6 w-6" />
-              </button>
-              <div className="flex items-center">
-                <CreditCard className="h-8 w-8 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">CardManager</span>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+      {/* Sidebar - Fixed on desktop */}
+      <div className={`hidden lg:flex lg:flex-shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-72'}`}>
+        <div className="flex flex-col w-full relative">
+          {/* Sidebar Header */}
+          <div className="flex items-center h-16 flex-shrink-0 px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 relative">
+            {!sidebarCollapsed && (
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                <CreditCard className="h-6 w-6 text-white" />
               </div>
-            </div>
+            )}
+            {!sidebarCollapsed ? (
+              <span className="ml-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                CardManager
+              </span>
+            ) : (
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg mx-auto">
+                <CreditCard className="h-6 w-6 text-white" />
+              </div>
+            )}
             
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleTheme}
-                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg"
-              >
-                {isDark ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </button>
-              
-              {/* Profile link in header for desktop */}
-              <div className="hidden md:flex md:items-center md:space-x-4">
-                <Link
-                  to="/profile"
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition"
-                >
-                  <User className="h-4 w-4 mr-1" />
-                  Perfil
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none transition"
-                >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Sair
-                </button>
+            {/* Collapse Toggle Button - Now in Header */}
+            <button
+              onClick={toggleSidebarCollapse}
+              className={`absolute ${sidebarCollapsed ? 'right-2' : 'right-3'} p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 transition-all duration-200 z-10`}
+              title={sidebarCollapsed ? 'Expandir menu' : 'Minimizar menu'}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          
+          {/* Sidebar Navigation */}
+          <div className="flex-1 flex flex-col overflow-y-auto bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
+            <nav className="flex-1 px-3 py-6 space-y-2">
+              <NavLink
+                to="/"
+                icon={Home}
+                label="Início"
+                isActive={isActive('/')}
+                onClick={() => setSidebarOpen(false)}
+                gradient="from-blue-500 to-indigo-600"
+                collapsed={sidebarCollapsed}
+              />
+              <NavLink
+                to="/categories"
+                icon={Tag}
+                label="Categorias"
+                isActive={isActive('/categories')}
+                onClick={() => setSidebarOpen(false)}
+                gradient="from-purple-500 to-pink-600"
+                collapsed={sidebarCollapsed}
+              />
+              <NavLink
+                to="/analytics"
+                icon={BarChart3}
+                label="Análise de Compras"
+                isActive={isActive('/analytics')}
+                onClick={() => setSidebarOpen(false)}
+                gradient="from-emerald-500 to-teal-600"
+                collapsed={sidebarCollapsed}
+              />
+              <NavLink
+                to="/recurring"
+                icon={RepeatIcon}
+                label="Compras Recorrentes"
+                isActive={isActive('/recurring')}
+                onClick={() => setSidebarOpen(false)}
+                gradient="from-amber-500 to-orange-600"
+                collapsed={sidebarCollapsed}
+              />
+            </nav>
+            
+            {/* User Section */}
+            {!sidebarCollapsed && (
+              <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-800">
+                <div className="flex items-center px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                  <div className="flex-shrink-0 p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">Usuário</div>
+                    <Link
+                      to="/profile"
+                      className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                    >
+                      Ver perfil
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Mobile sidebar backdrop */}
       <div 
-        className={`fixed inset-0 bg-gray-600 bg-opacity-75 z-20 transition-opacity duration-300 ease-in-out ${
+        className={`fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 transition-opacity duration-300 ease-in-out lg:hidden ${
           sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={toggleSidebar}
       />
 
-      {/* Sidebar */}
+      {/* Mobile Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-lg z-30 transform transition duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl z-50 transform transition duration-300 ease-in-out lg:hidden ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 md:relative md:z-0`}
+        }`}
       >
-        <div className="h-16 flex items-center justify-between px-4 md:hidden">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center">
-            <CreditCard className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">CardManager</span>
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+              <CreditCard className="h-5 w-5 text-white" />
+            </div>
+            <span className="ml-3 text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              CardManager
+            </span>
           </div>
           <button
             type="button"
             onClick={toggleSidebar}
-            className="p-2 rounded-md text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+            className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all"
           >
             <span className="sr-only">Close sidebar</span>
             <X className="h-6 w-6" />
           </button>
         </div>
         
-        <nav className="mt-4 px-2 space-y-1">
-          {/* Profile link at the top for mobile */}
-          <div className="md:hidden mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-            <Link
-              to="/profile"
-              className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <User className="mr-3 h-6 w-6 text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-              Perfil
-            </Link>
-          </div>
-
-          <Link
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          <NavLink
             to="/"
-            className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+            icon={Home}
+            label="Início"
+            isActive={isActive('/')}
             onClick={() => setSidebarOpen(false)}
-          >
-            <Home className="mr-3 h-6 w-6 text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-            Início
-          </Link>
-          <Link
+            gradient="from-blue-500 to-indigo-600"
+          />
+          <NavLink
             to="/categories"
-            className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+            icon={Tag}
+            label="Categorias"
+            isActive={isActive('/categories')}
             onClick={() => setSidebarOpen(false)}
-          >
-            <Tag className="mr-3 h-6 w-6 text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-            Categorias
-          </Link>
-          <Link
+            gradient="from-purple-500 to-pink-600"
+          />
+          <NavLink
             to="/analytics"
-            className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+            icon={BarChart3}
+            label="Análise de Compras"
+            isActive={isActive('/analytics')}
             onClick={() => setSidebarOpen(false)}
-          >
-            <BarChart3 className="mr-3 h-6 w-6 text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-            Análise de Compras
-          </Link>
-          <Link
+            gradient="from-emerald-500 to-teal-600"
+          />
+          <NavLink
             to="/recurring"
-            className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+            icon={RepeatIcon}
+            label="Compras Recorrentes"
+            isActive={isActive('/recurring')}
             onClick={() => setSidebarOpen(false)}
-          >
-            <RepeatIcon className="mr-3 h-6 w-6 text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-            Compras Recorrentes
-          </Link>
-          
-          <div className="md:hidden pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center px-4">
-              <div className="flex-shrink-0">
-                <User className="h-10 w-10 rounded-full text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 p-2" />
-              </div>
-              <div className="ml-3">
-                <div className="text-base font-medium text-gray-800 dark:text-gray-200">Usuário</div>
+            gradient="from-amber-500 to-orange-600"
+          />
+        </nav>
+        
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex items-center px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex-shrink-0 p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+              <User className="h-5 w-5 text-white" />
+            </div>
+            <div className="ml-3 flex-1">
+              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">Usuário</div>
+              <Link
+                to="/profile"
+                className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                onClick={() => setSidebarOpen(false)}
+              >
+                Ver perfil
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm sticky top-0 z-10">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16 items-center">
+              <div className="flex items-center">
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="mt-1 inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all lg:hidden"
+                  onClick={toggleSidebar}
                 >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Sair
+                  <span className="sr-only">Open sidebar</span>
+                  <Menu className="h-6 w-6" />
                 </button>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {isDark ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </button>
+                
+                <div className="hidden md:flex md:items-center md:space-x-3">
+                  <Link
+                    to="/profile"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-all duration-200 hover:shadow-md"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Perfil
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 focus:outline-none transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </nav>
-      </div>
+        </header>
 
-      {/* Main content */}
-      <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        {children}
-      </main>
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          <div className="py-8 px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
+  );
+};
+
+// NavLink Component
+interface NavLinkProps {
+  to: string;
+  icon: React.ElementType;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+  gradient: string;
+  collapsed?: boolean;
+}
+
+const NavLink: React.FC<NavLinkProps> = ({ to, icon: Icon, label, isActive, onClick, gradient, collapsed = false }) => {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className={`group flex items-center ${collapsed ? 'justify-center px-3' : 'px-4'} py-3 text-sm font-medium rounded-xl transition-all duration-200 relative ${
+        isActive
+          ? `bg-gradient-to-r ${gradient} text-white shadow-lg shadow-blue-500/25`
+          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+      }`}
+      title={collapsed ? label : undefined}
+    >
+      <Icon className={`${collapsed ? '' : 'mr-3'} h-5 w-5 transition-colors flex-shrink-0 ${
+        isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200'
+      }`} />
+      {!collapsed && (
+        <span className="truncate">{label}</span>
+      )}
+      {collapsed && !isActive && (
+        <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg">
+          {label}
+          <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900 dark:border-r-gray-800"></div>
+        </div>
+      )}
+    </Link>
   );
 };
 
