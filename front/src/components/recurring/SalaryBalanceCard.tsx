@@ -59,17 +59,19 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
   const balanceData = calculateBalance();
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <Calculator className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-bold text-gray-900">Análise Financeira</h2>
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <Calculator className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Análise Financeira</h2>
         </div>
         
         {!isEditing && (
           <button
             onClick={handleStartEdit}
-            className="inline-flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+            className="inline-flex items-center px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
           >
             <Edit className="h-4 w-4 mr-1" />
             {salary ? 'Editar Salário' : 'Definir Salário'}
@@ -78,8 +80,8 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
       </div>
 
       {/* Salary Input Section */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Salário Mensal
         </label>
         
@@ -95,7 +97,7 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
                 onChange={(e) => setTempSalary(e.target.value)}
                 step="0.01"
                 min="0"
-                className="pl-8 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="pl-8 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="0,00"
                 autoFocus
               />
@@ -109,7 +111,7 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
             </button>
             <button
               onClick={handleCancelEdit}
-              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               <X className="h-4 w-4 mr-1" />
               Cancelar
@@ -117,8 +119,8 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
           </div>
         ) : (
           <div className="flex items-center space-x-2">
-            <DollarSign className="h-5 w-5 text-gray-400" />
-            <span className="text-lg font-semibold text-gray-900">
+            <DollarSign className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">
               {salary ? `R$ ${salary.toFixed(2)}` : 'Não definido'}
             </span>
           </div>
@@ -128,7 +130,7 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
       {/* Balance Calculation */}
       {balanceData && (
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Projeção dos Próximos {balanceData.months.length} Meses
           </h3>
           
@@ -137,20 +139,20 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
             {balanceData.months.map((month, index) => {
               const monthBalance = salary! - month.valor;
               return (
-                <div key={index} className="bg-gray-50 rounded-lg p-3 border">
-                  <p className="text-sm font-medium text-gray-600">{month.mes_ano}</p>
+                <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{month.mes_ano}</p>
                   <div className="mt-1 space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Receita:</span>
-                      <span className="text-green-600">R$ {salary!.toFixed(2)}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Receita:</span>
+                      <span className="text-green-600 dark:text-green-400">R$ {salary!.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Gastos:</span>
-                      <span className="text-red-600">R$ {month.valor.toFixed(2)}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Gastos:</span>
+                      <span className="text-red-600 dark:text-red-400">R$ {month.valor.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-sm font-medium border-t pt-1">
-                      <span>Saldo:</span>
-                      <span className={monthBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    <div className="flex justify-between text-sm font-medium border-t border-gray-200 dark:border-gray-600 pt-1">
+                      <span className="text-gray-700 dark:text-gray-300">Saldo:</span>
+                      <span className={monthBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                         R$ {monthBalance.toFixed(2)}
                       </span>
                     </div>
@@ -161,24 +163,24 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
           </div>
 
           {/* Total Summary */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2 mb-1">
-                  <TrendingUp className="h-5 w-5 text-green-500" />
-                  <span className="text-sm font-medium text-gray-600">Receita Total</span>
+                  <TrendingUp className="h-5 w-5 text-green-500 dark:text-green-400" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Receita Total</span>
                 </div>
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
                   R$ {balanceData.totalIncome.toFixed(2)}
                 </p>
               </div>
               
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2 mb-1">
-                  <TrendingDown className="h-5 w-5 text-red-500" />
-                  <span className="text-sm font-medium text-gray-600">Gastos Totais</span>
+                  <TrendingDown className="h-5 w-5 text-red-500 dark:text-red-400" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Gastos Totais</span>
                 </div>
-                <p className="text-xl font-bold text-red-600">
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
                   R$ {balanceData.totalExpenses.toFixed(2)}
                 </p>
               </div>
@@ -186,18 +188,18 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2 mb-1">
                   {balanceData.balance >= 0 ? (
-                    <TrendingUp className="h-5 w-5 text-green-500" />
+                    <TrendingUp className="h-5 w-5 text-green-500 dark:text-green-400" />
                   ) : (
-                    <TrendingDown className="h-5 w-5 text-red-500" />
+                    <TrendingDown className="h-5 w-5 text-red-500 dark:text-red-400" />
                   )}
-                  <span className="text-sm font-medium text-gray-600">Saldo Final</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Saldo Final</span>
                 </div>
                 <p className={`text-2xl font-bold ${
-                  balanceData.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                  balanceData.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}>
                   R$ {balanceData.balance.toFixed(2)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {balanceData.balance >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
                 </p>
               </div>
@@ -206,14 +208,14 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
 
           {/* Alert for negative balance */}
           {balanceData.balance < 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center space-x-2">
-                <TrendingDown className="h-5 w-5 text-red-500" />
-                <span className="text-sm font-medium text-red-800">
+                <TrendingDown className="h-5 w-5 text-red-500 dark:text-red-400" />
+                <span className="text-sm font-medium text-red-800 dark:text-red-300">
                   Atenção: Seus gastos recorrentes excedem sua receita em R$ {Math.abs(balanceData.balance).toFixed(2)}
                 </span>
               </div>
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                 Considere revisar suas despesas ou aumentar sua receita.
               </p>
             </div>
@@ -224,11 +226,11 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
       {/* No salary message */}
       {!salary && (
         <div className="text-center py-6">
-          <Calculator className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 mb-2">
+          <Calculator className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+          <p className="text-gray-600 dark:text-gray-400 mb-2">
             Defina seu salário mensal para ver a análise financeira
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             Calcularemos automaticamente seu saldo após deduzir os gastos recorrentes
           </p>
         </div>
