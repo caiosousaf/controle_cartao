@@ -6,6 +6,7 @@ import (
 	"controle_cartao/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 // listarComprasRecorrentes godoc
@@ -46,7 +47,15 @@ func cadastrarComprasRecorrentes(c *gin.Context) {
 func obterPrevisaoGastos(c *gin.Context) {
 	usuarioID := middlewares.AuthUsuario(c)
 
-	res, err := recorrente.ObterPrevisaoGastos(usuarioID)
+	mesesStr := c.DefaultQuery("meses", "3")
+	meses, err := strconv.Atoi(mesesStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Parâmetro 'meses' inválido"})
+		c.Abort()
+		return
+	}
+
+	res, err := recorrente.ObterPrevisaoGastos(usuarioID, meses)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": error.Error(err)})
 		c.Abort()
