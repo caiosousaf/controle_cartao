@@ -18,12 +18,13 @@ const RecurringPurchasesPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [estimates, setEstimates] = useState<ExpenseEstimate[]>([]);
+  const [selectedMonths, setSelectedMonths] = useState(3);
   const pageSize = 10;
 
   useEffect(() => {
     fetchPurchases();
-    fetchEstimates();
-  }, []);
+    fetchEstimates(selectedMonths);
+  }, [selectedMonths]);
 
   const fetchPurchases = async (offset = 0) => {
     setIsLoading(true);
@@ -58,9 +59,9 @@ const RecurringPurchasesPage: React.FC = () => {
     }
   };
 
-  const fetchEstimates = async () => {
+  const fetchEstimates = async (meses: number) => {
     try {
-      const response = await recurringService.getEstimate();
+      const response = await recurringService.getEstimate(meses);
       setEstimates(response.dados || []);
     } catch (err) {
       console.error('Error fetching estimates:', err);
@@ -78,7 +79,7 @@ const RecurringPurchasesPage: React.FC = () => {
   const handlePurchaseCreated = () => {
     fetchPurchases(0);
     setPage(1);
-    fetchEstimates();
+    fetchEstimates(selectedMonths);
   };
 
   // Show error state
@@ -167,6 +168,22 @@ const RecurringPurchasesPage: React.FC = () => {
         </div>
       </div>
 
+      <div className="flex items-center justify-end bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Análise para os próximos:</span>
+          <select
+            value={selectedMonths}
+            onChange={(e) => setSelectedMonths(Number(e.target.value))}
+            className="block w-32 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+          >
+            <option value={3}>3 meses</option>
+            <option value={6}>6 meses</option>
+            <option value={9}>9 meses</option>
+            <option value={12}>12 meses</option>
+          </select>
+        </div>
+      </div>
+
       {/* Financial Analysis Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {estimates.length > 0 && <EstimateCard estimates={estimates} />}
@@ -223,7 +240,7 @@ const RecurringPurchasesPage: React.FC = () => {
                 purchase={purchase}
                 onUpdate={() => {
                   fetchPurchases(0);
-                  fetchEstimates();
+                  fetchEstimates(selectedMonths);
                 }}
               />
             ))}

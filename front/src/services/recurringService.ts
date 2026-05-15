@@ -80,9 +80,9 @@ export const recurringService = {
     }
   },
 
-  getEstimate: async (): Promise<ExpenseEstimateResponse> => {
+  getEstimate: async (meses = 3): Promise<ExpenseEstimateResponse> => {
     try {
-      const response = await api.get<ExpenseEstimateResponse>('/cadastros/compras/recorrente/previsao');
+      const response = await api.get<ExpenseEstimateResponse>(`/cadastros/compras/recorrente/previsao?meses=${meses}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching estimate:', error);

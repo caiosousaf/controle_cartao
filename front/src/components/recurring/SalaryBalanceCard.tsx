@@ -42,17 +42,15 @@ const SalaryBalanceCard: React.FC<SalaryBalanceCardProps> = ({ estimates }) => {
   const calculateBalance = () => {
     if (!salary || estimates.length === 0) return null;
 
-    // Take only the first 3 months of estimates
-    const next3Months = estimates.slice(0, 3);
-    const totalExpenses = next3Months.reduce((sum, estimate) => sum + estimate.valor, 0);
-    const totalIncome = salary * next3Months.length;
+    const totalExpenses = estimates.reduce((sum, estimate) => sum + estimate.valor, 0);
+    const totalIncome = salary * estimates.length;
     const balance = totalIncome - totalExpenses;
 
     return {
       totalIncome,
       totalExpenses,
       balance,
-      months: next3Months
+      months: estimates
     };
   };
 

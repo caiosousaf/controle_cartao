@@ -96,9 +96,9 @@ func CadastrarComprasRecorrentes(usuarioID *uuid.UUID) (err error) {
 	return
 }
 
-// ObterPrevisaoGastos contém a regra de negócio para obter uma previsão de gastos dos próximos 3 meses com as compras recorrentes
-func ObterPrevisaoGastos(usuarioID *uuid.UUID) (res *ResPrevisaoGastosPag, err error) {
-	const msgErrPadrao = "Erro ao obter previsão de gastos dos próximos 3 meses"
+// ObterPrevisaoGastos contém a regra de negócio para obter uma previsão de gastos dos próximos meses com as compras recorrentes
+func ObterPrevisaoGastos(usuarioID *uuid.UUID, meses int) (res *ResPrevisaoGastosPag, err error) {
+	const msgErrPadrao = "Erro ao obter previsão de gastos"
 
 	res = new(ResPrevisaoGastosPag)
 
@@ -110,7 +110,7 @@ func ObterPrevisaoGastos(usuarioID *uuid.UUID) (res *ResPrevisaoGastosPag, err e
 
 	repo := recorrente.NovoRepo(db)
 
-	previsaoGastos, err := repo.ObterPrevisaoGastos(usuarioID)
+	previsaoGastos, err := repo.ObterPrevisaoGastos(usuarioID, meses)
 	if err != nil {
 		return nil, utils.Wrap(err, msgErrPadrao)
 	}

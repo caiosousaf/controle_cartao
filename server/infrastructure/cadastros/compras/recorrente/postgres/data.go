@@ -68,8 +68,8 @@ func (pg *DBRecorrentes) ObterFaturaCartaoGeral(usuarioID *uuid.UUID) (faturaID 
 	return
 }
 
-// ObterPrevisaoGastos obtém a previsão de gastos dos próximos 3 meses com as compras recorrentes
-func (pg *DBRecorrentes) ObterPrevisaoGastos(usuarioID *uuid.UUID) (gastos *model.PrevisaoGastosPag, err error) {
+// ObterPrevisaoGastos obtém a previsão de gastos dos próximos meses com as compras recorrentes
+func (pg *DBRecorrentes) ObterPrevisaoGastos(usuarioID *uuid.UUID, meses int) (gastos *model.PrevisaoGastosPag, err error) {
 	gastos = new(model.PrevisaoGastosPag)
 
 	query := `
@@ -90,39 +90,22 @@ recorrentes_expandido AS (
   
   UNION ALL
   
-  	SELECT data_vencimento, valor_parcela 
-  	FROM compras_base 
+  	SELECT (data_vencimento + (n || ' month')::interval)::date, valor_parcela 
+  	FROM compras_base, generate_series(0, $2 - 1) n
  	WHERE recorrente = TRUE
  	AND TO_CHAR(data_vencimento, 'MM/YYYY') = TO_CHAR(NOW(), 'MM/YYYY')
-  
-  UNION ALL
-  
-	SELECT data_vencimento + INTERVAL '1 month', valor_parcela 
-	FROM compras_base 
-	WHERE recorrente = TRUE
-	AND TO_CHAR(data_vencimento, 'MM/YYYY') = TO_CHAR(NOW(), 'MM/YYYY')
-	
-  UNION ALL
-  
-  	SELECT DATA_VENCIMENTO + INTERVAL '2 month', valor_parcela 
-  	FROM compras_base 
-  	WHERE recorrente = TRUE
-  	AND TO_CHAR(data_vencimento, 'MM/YYYY') = TO_CHAR(NOW(), 'MM/YYYY')
 )
 	SELECT
   		TO_CHAR(data_vencimento, 'MM/YYYY') AS mes_ano,
   		CAST(SUM(valor_parcela) AS NUMERIC(10,2)) AS valor_total
 	FROM RECORRENTES_EXPANDIDO
-	WHERE TO_CHAR(data_vencimento, 'MM/YYYY') IN (
-  		TO_CHAR(NOW(), 'MM/YYYY'),
-  		TO_CHAR(NOW() + INTERVAL '1 month', 'MM/YYYY'),
-  		TO_CHAR(NOW() + INTERVAL '2 month', 'MM/YYYY')
-)
+	WHERE data_vencimento >= date_trunc('month', NOW())
+	AND data_vencimento < date_trunc('month', NOW()) + ($2 || ' month')::interval
 	GROUP BY TO_CHAR(data_vencimento, 'MM/YYYY')
 	ORDER BY MIN(data_vencimento)
 `
 
-	rows, err := pg.DB.Query(query, usuarioID)
+	rows, err := pg.DB.Query(query, usuarioID, meses)
 	if err != nil {
 		return nil, err
 	}
