@@ -34,8 +34,8 @@ func (r *repo) CadastrarCompraRecorrente(req *model.ComprasRecorrentes) (err err
 }
 
 // ObterPrevisaoGastos é um gerenciador de fluxo para obter uma previsão de gastos
-func (r *repo) ObterPrevisaoGastos(usuarioID *uuid.UUID) (gastos *model.PrevisaoGastosPag, err error) {
-	return r.Data.ObterPrevisaoGastos(usuarioID)
+func (r *repo) ObterPrevisaoGastos(usuarioID *uuid.UUID, meses int) (gastos *model.PrevisaoGastosPag, err error) {
+	return r.Data.ObterPrevisaoGastos(usuarioID, meses)
 }
 
 // CadastrarNovaCompraRecorrente é um gerenciador de fluxo para cadastrar uma nova compra recorrente
